@@ -1,9 +1,6 @@
 var http = require("http");
 
 function parseSearchQuery(query) {
-	// Please remove this line!
-	// query = String("dog");
-
 	// Prevent undefined query from being used to mess with the server
 	if (query === undefined || query === null) {
 		return;

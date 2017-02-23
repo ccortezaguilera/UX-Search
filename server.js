@@ -1,14 +1,29 @@
 var http = require("http");
 
+/**
+ * Writes out the HTML webpage, which writes out the form, and then writes out
+ * all thumbnails.
+ * 
+ * @param {http.ServerResponse} response 
+ * @param {string} body
+ * @param {string} query 
+ */
 function writeToClientResponse(response, body, query) {
 	response.writeHead(200, {'Content-Type': 'text/html'});
 	response.write(body.slice(0, body.indexOf("</body>")));
 	parseSearchQuery(query, response);
 }
 
+/**
+ * Parses the search query and write the images to the HTML page.
+ * 
+ * @param {string} query 
+ * @param {http.ServerResponse} response 
+ */
 function parseSearchQuery(query, response) {
 	// Prevent undefined query from being used to mess with the server
 	if (query === undefined || query === null) {
+		response.end();
 		return;
 	}
 
@@ -28,7 +43,8 @@ function parseSearchQuery(query, response) {
 
 	var options = {
 		hostname: mrEdmondsGenerousHost,
-		path: mrEdmondsGenerousPath + queryArgument + "&limit=200",
+		// The maximum limit is 100, so we cannot have 200.
+		path: mrEdmondsGenerousPath + queryArgument + "&limit=100",
 		method: "GET",
 		port: "80"
 	};
@@ -38,6 +54,14 @@ function parseSearchQuery(query, response) {
 	});
 }
 
+/**
+ * Sends a request to Mr. Edmonds' website, which should send back a JSON
+ * formatted document. Then, write all the thumbnails to the response to the
+ * client.
+ * 
+ * @param {http.ServerResponse} mrEdmondResponse 
+ * @param {http.ServerResponse} clientResponse 
+ */
 function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
 	var body = "";
 	mrEdmondResponse.on("data", function(data) {
@@ -45,22 +69,30 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
 	});
 
 	mrEdmondResponse.on("end", function() {
-		let thumbnailList = showThumbnail(body);
+		let thumbnailList = getThumbnails(body);
 		for (var thumbnail of thumbnailList) {
 			clientResponse.write(thumbnail);
 		}
-		clientResponse.write("</body></html>");
+		//clientResponse.write("</body></html>");
 		clientResponse.end();
 	});
 }
 
-function showThumbnail(response) {
+/**
+ * Returns an array of thumbnails.
+ * 
+ * @param {http.ServerResponse} response 
+ * @returns
+ */
+function getThumbnails(response) {
 	let responseObj = JSON.parse(response);
 	let keys = Object.keys(responseObj);
 	let imageList = new Array();
 	for (let key of keys) {
 		var htmlTag = responseObj[key]['thumbnail_html_tag'];
-		imageList.push(htmlTag);
+		if (typeof htmlTag !== "undefined") {
+			imageList.push(htmlTag);
+		}
 	}
 
 	return imageList;
@@ -81,7 +113,6 @@ http.createServer(function(request, response) {
 		queries = querystring.parse(rawQueries)["SearchQuery"];
 	}
 	
-
 	fs.readFile(path.substring(1), function(err, data) {
 		if (err) {
 			console.log(err);

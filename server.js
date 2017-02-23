@@ -1,6 +1,12 @@
 var http = require("http");
 
-function parseSearchQuery(query) {
+function writeToClientResponse(response, body, query) {
+	response.writeHead(200, {'Content-Type': 'text/html'});
+	response.write(body.slice(0, body.indexOf("</body>")));
+	parseSearchQuery(query, response);
+}
+
+function parseSearchQuery(query, response) {
 	// Prevent undefined query from being used to mess with the server
 	if (query === undefined || query === null) {
 		return;
@@ -22,35 +28,31 @@ function parseSearchQuery(query) {
 
 	var options = {
 		hostname: mrEdmondsGenerousHost,
-		path: mrEdmondsGenerousPath + queryArgument,
+		path: mrEdmondsGenerousPath + queryArgument + "&limit=200",
 		method: "GET",
 		port: "80"
 	};
 
-	var imageList;
-	var req = http.request(options, function(response) {
-		imageList = cleanSearchResult(response);
+	http.get(options, function(mrEdmondResponse) {
+		sendRequestToMrEdmond(mrEdmondResponse, response);
 	});
-	req.end();
-
-	return imageList;
 }
 
-function cleanSearchResult(response) {
+function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
 	var body = "";
-	response.on("data", function(data) {
+	mrEdmondResponse.on("data", function(data) {
 		body += data;
 	});
 
-	response.on("end", function() {
-		return showThumbnail(body);
-		// console.log(body);
+	mrEdmondResponse.on("end", function() {
+		let thumbnailList = showThumbnail(body);
+		for (var thumbnail of thumbnailList) {
+			clientResponse.write(thumbnail);
+		}
+		clientResponse.write("</body></html>");
+		clientResponse.end();
 	});
-};
-
-// function addImageDOM(img) {
-// 	document.body.appendChild(img);
-// }
+}
 
 function showThumbnail(response) {
 	let responseObj = JSON.parse(response);
@@ -59,12 +61,9 @@ function showThumbnail(response) {
 	for (let key of keys) {
 		var htmlTag = responseObj[key]['thumbnail_html_tag'];
 		imageList.push(htmlTag);
-		// addImageDOM(htmlTag);
 	}
-	console.log(imageList);
 
 	return imageList;
-
 }
 
 // Backup code
@@ -86,24 +85,10 @@ http.createServer(function(request, response) {
 	fs.readFile(path.substring(1), function(err, data) {
 		if (err) {
 			console.log(err);
-			response.writeHead(404, {'Content-Type': 'text/html'})
+			response.writeHead(404, {'Content-Type': 'text/html'});
+			response.end();
 		} else {
-			response.writeHead(200, {'Content-Type': 'text/html'});
-			var body = data.toString();
-			var finalBody = body.slice(0, body.indexOf("</body>"));
-
-			var imageList = parseSearchQuery(queries);
-			if (imageList !== undefined && imageList.length > 0) {
-				imageList.forEach(function(currentValue, index, array) {
-					finalBody += currentValue;
-				});
-			}
-			
-			finalBody += body.slice(body.indexOf("</body>"));
-			console.log(finalBody);
-			response.write(finalBody);
-			
+			writeToClientResponse(response, data.toString(), queries);
 		}
-		response.end();
 	});
 }).listen(8080);

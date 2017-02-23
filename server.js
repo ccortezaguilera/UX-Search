@@ -1,8 +1,29 @@
 var http = require("http");
 
-function parseSearchQuery(query) {
+/**
+ * Writes out the HTML webpage, which writes out the form, and then writes out
+ * all thumbnails.
+ * 
+ * @param {http.ServerResponse} response 
+ * @param {string} body
+ * @param {string} query 
+ */
+function writeToClientResponse(response, body, query) {
+	response.writeHead(200, {'Content-Type': 'text/html'});
+	response.write(body.slice(0, body.indexOf("</body>")));
+	parseSearchQuery(query, response);
+}
+
+/**
+ * Parses the search query and write the images to the HTML page.
+ * 
+ * @param {string} query 
+ * @param {http.ServerResponse} response 
+ */
+function parseSearchQuery(query, response) {
 	// Prevent undefined query from being used to mess with the server
 	if (query === undefined || query === null) {
+		response.end();
 		return;
 	}
 
@@ -22,49 +43,59 @@ function parseSearchQuery(query) {
 
 	var options = {
 		hostname: mrEdmondsGenerousHost,
-		path: mrEdmondsGenerousPath + queryArgument,
+		// The maximum limit is 100, so we cannot have 200.
+		path: mrEdmondsGenerousPath + queryArgument + "&limit=100",
 		method: "GET",
 		port: "80"
 	};
 
-	var imageList;
-	var req = http.request(options, function(response) {
-		imageList = cleanSearchResult(response);
+	http.get(options, function(mrEdmondResponse) {
+		sendRequestToMrEdmond(mrEdmondResponse, response);
 	});
-	req.end();
-
-	return imageList;
 }
 
-function cleanSearchResult(response) {
+/**
+ * Sends a request to Mr. Edmonds' website, which should send back a JSON
+ * formatted document. Then, write all the thumbnails to the response to the
+ * client.
+ * 
+ * @param {http.ServerResponse} mrEdmondResponse 
+ * @param {http.ServerResponse} clientResponse 
+ */
+function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
 	var body = "";
-	response.on("data", function(data) {
+	mrEdmondResponse.on("data", function(data) {
 		body += data;
 	});
 
-	response.on("end", function() {
-		return showThumbnail(body);
-		// console.log(body);
+	mrEdmondResponse.on("end", function() {
+		let thumbnailList = getThumbnails(body);
+		for (var thumbnail of thumbnailList) {
+			clientResponse.write(thumbnail);
+		}
+		//clientResponse.write("</body></html>");
+		clientResponse.end();
 	});
-};
+}
 
-// function addImageDOM(img) {
-// 	document.body.appendChild(img);
-// }
-
-function showThumbnail(response) {
+/**
+ * Returns an array of thumbnails.
+ * 
+ * @param {http.ServerResponse} response 
+ * @returns
+ */
+function getThumbnails(response) {
 	let responseObj = JSON.parse(response);
 	let keys = Object.keys(responseObj);
 	let imageList = new Array();
 	for (let key of keys) {
 		var htmlTag = responseObj[key]['thumbnail_html_tag'];
-		imageList.push(htmlTag);
-		// addImageDOM(htmlTag);
+		if (typeof htmlTag !== "undefined") {
+			imageList.push(htmlTag);
+		}
 	}
-	console.log(imageList);
 
 	return imageList;
-
 }
 
 // Backup code
@@ -82,28 +113,13 @@ http.createServer(function(request, response) {
 		queries = querystring.parse(rawQueries)["SearchQuery"];
 	}
 	
-
 	fs.readFile(path.substring(1), function(err, data) {
 		if (err) {
 			console.log(err);
-			response.writeHead(404, {'Content-Type': 'text/html'})
+			response.writeHead(404, {'Content-Type': 'text/html'});
+			response.end();
 		} else {
-			response.writeHead(200, {'Content-Type': 'text/html'});
-			var body = data.toString();
-			var finalBody = body.slice(0, body.indexOf("</body>"));
-
-			var imageList = parseSearchQuery(queries);
-			if (imageList !== undefined && imageList.length > 0) {
-				imageList.forEach(function(currentValue, index, array) {
-					finalBody += currentValue;
-				});
-			}
-			
-			finalBody += body.slice(body.indexOf("</body>"));
-			console.log(finalBody);
-			response.write(finalBody);
-			
+			writeToClientResponse(response, data.toString(), queries);
 		}
-		response.end();
 	});
 }).listen(8080);

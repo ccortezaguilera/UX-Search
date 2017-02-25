@@ -1,4 +1,4 @@
-var displaySearch = require('./display_search_box');
-var displayImage = require('./display_image');
+var displaySearch = require('./displaysearchbox');
+var displayImage = require('./displayimage');
 displaySearch();
 displayImage();

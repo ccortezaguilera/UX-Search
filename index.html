@@ -2,12 +2,13 @@
 <html>
     <head>
         <meta charset="utf8">
-        <!--<script type="text/javascript" src="kine.js"></script>-->
     </head>
     <body>
-        <form>
-            Search It: <input type="text" name="SearchQuery" id="query">
-            <input type="submit" name="Submit">
-        </form>
+        <div align="center">
+            <form method="POST" action="http://localhost:8080/">
+                <label for="SearchQuery"> Search it: </label><input type="text" name="SearchQuery" id="query">
+                <input type="submit" name="Submit">
+            </form>
+        </div>
     </body>
 </html>

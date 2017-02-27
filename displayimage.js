@@ -65,7 +65,7 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
         console.log("Entered MrEdmondResponseEnd");
 		let thumbnailList = getThumbnails(body);
         //TODO will fix the response to write the file and place value with search query
-        clientResponse.write("<html><body>"); 
+        //clientResponse.write("<html><body>"); 
 		for (var thumbnail of thumbnailList) {
 			clientResponse.write(thumbnail);
 		}
@@ -104,13 +104,28 @@ function display_image() {
         if (request.method === "POST") {
             if (request.url == "/") {
                 response.writeHead(200, {'Content-Type': 'text/html'});
-                request.on('data', function(data) {
-                    let formData = querystring.parse(data.toString());
-                    let encodedQuery = encodeURIComponent(formData['SearchQuery']);
-                    console.log(encodedQuery);
-                    parseSearchQuery(encodedQuery, response);
+
+				// Read html for the searchbox and write that before displaying images.
+				fs.readFile("index.html", function(err, data) {
+					if (err) {
+						console.log(err);
+						response.end();
+					} else {
+						let htmlPage = data.toString();
+						response.write(htmlPage.substring(0, htmlPage.indexOf("</body>")));
+						//response.end();
+						
+						request.on('data', function(data) {
+							let formData = querystring.parse(data.toString());
+							let encodedQuery = encodeURIComponent(formData['SearchQuery']);
+							console.log(encodedQuery);
+							parseSearchQuery(encodedQuery, response);
+						
+						});
+					}
+				});
+				// CLOSE_CHANGES
                 
-                });
             /*
 	        fs.readFile(path.substring(1), function(err, data) {
 		        if (err) {
@@ -125,17 +140,17 @@ function display_image() {
         }
         else {
             fs.readFile("index.html", function(err, data) {
-		    if (err) {
-			    console.log(err);
-                console.log("We entered here because there was extra and we couldn't open file");
-			    response.writeHead(404, {'Content-Type': 'text/html'});
-			    response.end();
-		    } else {
-                response.writeHead(200, {'Content-Type': 'text/html'});
-			    response.write(data.toString());
-                response.end();
-		    }
-	    });
+				if (err) {
+					console.log(err);
+					console.log("We entered here because there was extra and we couldn't open file");
+					response.writeHead(404, {'Content-Type': 'text/html'});
+					response.end();
+				} else {
+					response.writeHead(200, {'Content-Type': 'text/html'});
+					response.write(data.toString());
+					response.end();
+				}
+            });
         }
 
         }

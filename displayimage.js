@@ -115,7 +115,6 @@ function display_image() {
                     let positionOfBodyEnd = webHtmlPage.indexOf("</body>");
 
                     // Write the search box and the orginal query in the box.
-                    console.log(formData['SearchQuery']);
                     response.write(webHtmlPage.substring(0, positionOfTextBoxInput));
                     response.write("value=\"" + formData['SearchQuery'] + "\" ");
                     response.write(webHtmlPage.substring(positionOfTextBoxInput, positionOfBodyEnd));

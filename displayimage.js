@@ -104,25 +104,24 @@ function display_image() {
         if (request.method === "POST") {
             if (request.url == "/") {
                 response.writeHead(200, {'Content-Type': 'text/html'});
+                request.on('data', function(data) {
+                    // Obtain the query information.
+                    let formData = querystring.parse(data.toString());
+                    let encodedQuery = encodeURIComponent(formData['SearchQuery']);
 
-                // Read html for the searchbox and write that before displaying images.
-                fs.readFile("index.html", function(err, data) {
-                    if (err) {
-                        console.log(err);
-                        response.end();
-                    } else {
-                        let htmlPage = data.toString();
-                        response.write(htmlPage.substring(0, htmlPage.indexOf("</body>")));
-                        //response.end();
-                        
-                        request.on('data', function(data) {
-                            let formData = querystring.parse(data.toString());
-                            let encodedQuery = encodeURIComponent(formData['SearchQuery']);
-                            console.log(encodedQuery);
-                            parseSearchQuery(encodedQuery, response);
-                        
-                        });
-                    }
+                    // Read the HTML file and select key positions in the file.
+                    let webHtmlPage = fs.readFileSync("index.html").toString();
+                    let positionOfTextBoxInput = webHtmlPage.indexOf("id=\"query\"");
+                    let positionOfBodyEnd = webHtmlPage.indexOf("</body>");
+
+                    // Write the search box and the orginal query in the box.
+                    console.log(formData['SearchQuery']);
+                    response.write(webHtmlPage.substring(0, positionOfTextBoxInput));
+                    response.write("value=\"" + formData['SearchQuery'] + "\" ");
+                    response.write(webHtmlPage.substring(positionOfTextBoxInput, positionOfBodyEnd));
+
+                    console.log(encodedQuery);
+                    parseSearchQuery(encodedQuery, response);
                 });
                 
             /*

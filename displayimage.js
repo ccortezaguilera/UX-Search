@@ -152,6 +152,6 @@ function display_image() {
 
         }
         
-    }).listen(8080);
+    }).listen(8888);
 }
 module.exports = display_image;

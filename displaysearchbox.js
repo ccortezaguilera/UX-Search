@@ -21,6 +21,6 @@ function displaySearch() {
             response.writeHead(404);
             response.end("FILE NOT FOUND");
         }
-    }).listen(5070);
+    }).listen(8080);
 }
 module.exports = displaySearch;

@@ -81,7 +81,7 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
 
         // Check for valid page number inputs.
         let resultsCount = getNumberOfResults(body);
-        let pageCount = Math.ceil(resultsCount / imagesPerPage);
+        let pageCount = Math.max(Math.ceil(resultsCount / imagesPerPage), 1);
 
         // if (pageNumber === undefined || Number(pageNumber) < 1) {
         //     pageNumber = "1";

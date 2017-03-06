@@ -100,7 +100,7 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
 
         // Write the page number into the input box.
         clientResponse.write("value=\"" + String(pageNumber) + "\"");
-        clientResponse.write("size=\"" + (Math.log10(pageCount)) + "\"");
+        clientResponse.write("size=\"" + (Math.log10(pageCount) + 1) + "\"");
 
         // Write out the rest of the HTML.
         clientResponse.write(webHtmlPage.substring(positionOfPageInput, positionOfDivEnd + "</div>".length));

@@ -1,5 +1,10 @@
 var http = require("http");
 
+// Workaround for storing page info.
+var webHtmlPage;
+var pageNumber;
+const imagesPerPage = 100;
+
 /**
  * Writes out the HTML webpage, which writes out the form, and then writes out
  * all thumbnails.
@@ -37,7 +42,7 @@ function parseSearchQuery(query, response) {
     var options = {
         hostname: mrEdmondsGenerousHost,
         // The maximum limit is 100, so we cannot have 200.
-        path: mrEdmondsGenerousPath + queryArgument + "&limit=100",
+        path: mrEdmondsGenerousPath + queryArgument + "&limit=" + imagesPerPage,
         method: "GET",
         port: "80"
     };
@@ -63,14 +68,42 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
     console.log(body);
     mrEdmondResponse.on("end", function() {
         console.log("Entered MrEdmondResponseEnd");
+        // Write images
         let thumbnailList = getThumbnails(body);
-        console.log(getNumberOfResults(body));
         //TODO will fix the response to write the file and place value with search query
         //clientResponse.write("<html><body>"); 
         for (var thumbnail of thumbnailList) {
             clientResponse.write(thumbnail);
         }
-        clientResponse.write("</body></html>");
+        clientResponse.write("\n</div>");
+
+        // Write page numbers
+
+        // Check for valid page number inputs.
+        let resultsCount = getNumberOfResults(body);
+        let pageCount = Math.ceil(resultsCount / imagesPerPage);
+
+        if (pageNumber === undefined || Number(pageNumber) < 1) {
+            pageNumber = "1";
+        } else if (pageNumber > pageCount) {
+            pageNumber = String(pageCount);
+        }
+
+        // Locate the HTML page display markup.
+        let positionOfImageEnd = webHtmlPage.indexOf("<label for=\"PageNumber\">");
+        let positionOfPageInput = webHtmlPage.indexOf(" id=\"pageNumber\">", positionOfImageEnd);
+        let positionOfDivEnd = webHtmlPage.indexOf("</div>", positionOfPageInput);
+
+        // Write HTML up to the point where the page number is shown.
+        clientResponse.write(webHtmlPage.substring(positionOfImageEnd, positionOfPageInput));
+
+        // Write the page number into the input box.
+        clientResponse.write("value=\"" + String(pageNumber) + "\"");
+        clientResponse.write("size=\"" + (Math.log10(pageCount)) + "\"");
+
+        // Write out the rest of the HTML.
+        clientResponse.write(webHtmlPage.substring(positionOfPageInput, positionOfDivEnd + "</div>".length));
+        clientResponse.write(webHtmlPage.substring(positionOfDivEnd + "</div>".length));
         console.log("Ending prior to use");
         clientResponse.end();
     });
@@ -126,11 +159,12 @@ function display_image() {
                     // Obtain the query information.
                     let formData = querystring.parse(data.toString());
                     let encodedQuery = encodeURIComponent(formData['SearchQuery']);
+                    pageNumber = encodeURIComponent(formData['PageNumber']);
 
                     // Read the HTML file and select key positions in the file.
-                    let webHtmlPage = fs.readFileSync("index.html").toString();
+                    webHtmlPage = fs.readFileSync("index.html").toString();
                     let positionOfTextBoxInput = webHtmlPage.indexOf("id=\"query\"");
-                    let positionOfBodyEnd = webHtmlPage.indexOf("</body>");
+                    let positionOfBodyEnd = webHtmlPage.indexOf("<div align=\"left\" id=\"imageDiv\">", positionOfTextBoxInput) + "<div align=\"left\" id=\"imageDiv\">".length;
 
                     // Write the search box and the orginal query in the box.
                     response.write(webHtmlPage.substring(0, positionOfTextBoxInput));

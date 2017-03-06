@@ -64,6 +64,7 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
     mrEdmondResponse.on("end", function() {
         console.log("Entered MrEdmondResponseEnd");
         let thumbnailList = getThumbnails(body);
+        console.log(getNumberOfResults(body));
         //TODO will fix the response to write the file and place value with search query
         //clientResponse.write("<html><body>"); 
         for (var thumbnail of thumbnailList) {
@@ -93,6 +94,23 @@ function getThumbnails(response) {
     }
 
     return imageList;
+}
+
+/**
+ * Returns the number of results on a page.
+ * 
+ * @param {ServerResponse} response
+ * @returns 
+ */
+function getNumberOfResults(response) {
+    let responseObj = JSON.parse(response);
+    let imageList = new Array();
+    var resultCount = responseObj['nb_results'];
+    if (typeof resultCount !== "undefined") {
+        return Number(resultCount);
+    }
+
+    return 0;
 }
 
 // Backup code

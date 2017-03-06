@@ -42,7 +42,7 @@ function parseSearchQuery(query, response) {
     var options = {
         hostname: mrEdmondsGenerousHost,
         // The maximum limit is 100, so we cannot have 200.
-        path: mrEdmondsGenerousPath + queryArgument + "&limit=" + imagesPerPage,
+        path: mrEdmondsGenerousPath + queryArgument + "&limit=" + imagesPerPage + "&offset=" + ((pageNumber - 1) * imagesPerPage),
         method: "GET",
         port: "80"
     };
@@ -83,11 +83,12 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
         let resultsCount = getNumberOfResults(body);
         let pageCount = Math.ceil(resultsCount / imagesPerPage);
 
-        if (pageNumber === undefined || Number(pageNumber) < 1) {
-            pageNumber = "1";
-        } else if (pageNumber > pageCount) {
-            pageNumber = String(pageCount);
-        }
+        // if (pageNumber === undefined || Number(pageNumber) < 1) {
+        //     pageNumber = "1";
+        // } 
+        // else if (pageNumber > pageCount) {
+        //     pageNumber = String(pageCount);
+        // }
 
         // Locate the HTML page display markup.
         let positionOfImageEnd = webHtmlPage.indexOf("<label for=\"PageNumber\">");
@@ -160,6 +161,10 @@ function display_image() {
                     let formData = querystring.parse(data.toString());
                     let encodedQuery = encodeURIComponent(formData['SearchQuery']);
                     pageNumber = encodeURIComponent(formData['PageNumber']);
+
+                    if (pageNumber === undefined || Number(pageNumber) < 1) {
+                        pageNumber = "1";
+                    } 
 
                     // Read the HTML file and select key positions in the file.
                     webHtmlPage = fs.readFileSync("index.html").toString();

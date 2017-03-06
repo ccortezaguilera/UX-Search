@@ -90,24 +90,26 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
         //     pageNumber = String(pageCount);
         // }
 
+        let pageBoxHtml = fs.readFileSync("PageInputBox.txt", "utf8");
+
         // Locate the HTML page display markup.
-        let positionOfImageEnd = webHtmlPage.indexOf("<label for=\"PageNumber\"");
-        let positionOfPageInput = webHtmlPage.indexOf(" id=\"pageNumber\">", positionOfImageEnd);
-        let positionOfDivEnd = webHtmlPage.indexOf("</div>", positionOfPageInput);
+        // let positionOfImageEnd = pageBoxHtml.indexOf("<label for=\"PageNumber\"");
+        let positionOfPageInput = pageBoxHtml.indexOf("id=\"pageNumber\">");
+        // let positionOfDivEnd = pageBoxHtml.indexOf("</div>", positionOfPageInput);
 
         // Write HTML up to the point where the page number is shown.
-        // clientResponse.write(webHtmlPage.substring(positionOfImageEnd, positionOfPageInput));
-        clientResponse.write("<label for=\"PageNumber\">Page</label>");
+        clientResponse.write(pageBoxHtml.substring(0, positionOfPageInput));
 
         // Write the page number into the input box.
-        clientResponse.write("<input type=\"text\" name=\"PageNumber\" id=\"pageNumber\" ");
-        clientResponse.write("value=\"" + String(pageNumber) + "\"");
-        clientResponse.write("size=\"" + (Math.log10(pageCount) + 1) + "\">");
+        // clientResponse.write("<input type=\"text\" name=\"PageNumber\" id=\"pageNumber\" ");
+        clientResponse.write("value=\"" + pageNumber + "\" ");
+        clientResponse.write("size=\"" + (Math.floor(Math.log10(pageCount)) + 1) + "\" ");
 
         // Write out the rest of the HTML.
-        // clientResponse.write(webHtmlPage.substring(positionOfPageInput, positionOfDivEnd + "</div>".length));
-        clientResponse.write("<input type=\"submit\" name=\"Submit\" value=\"Go!\"></form>");
-        clientResponse.write(webHtmlPage.substring(positionOfDivEnd + "</div>".length));
+        clientResponse.write(pageBoxHtml.substring(positionOfPageInput));
+        // clientResponse.write(pageBoxHtml.substring(positionOfPageInput, positionOfDivEnd + "</div>".length));
+        // clientResponse.write("<input type=\"submit\" name=\"Submit\" value=\"Go!\"></form>");
+        // clientResponse.write(pageBoxHtml.substring(positionOfDivEnd + "</div>".length));
         console.log("Ending prior to use");
         clientResponse.end();
     });
@@ -165,9 +167,11 @@ function display_image() {
                     let encodedQuery = encodeURIComponent(formData['SearchQuery']);
                     pageNumber = encodeURIComponent(formData['PageNumber']);
 
-                    if (pageNumber === undefined || Number(pageNumber) < 1) {
-                        pageNumber = "1";
-                    } 
+                    if (pageNumber === undefined) {
+                        pageNumber = Math.max(pageNumber, 1);
+                    } else if (!Number.isInteger(pageNumber)) {
+                        pageNumber = 1;
+                    }
 
                     // Read the HTML file and select key positions in the file.
                     webHtmlPage = fs.readFileSync("index.html").toString();

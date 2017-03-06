@@ -91,19 +91,22 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
         // }
 
         // Locate the HTML page display markup.
-        let positionOfImageEnd = webHtmlPage.indexOf("<label for=\"PageNumber\">");
+        let positionOfImageEnd = webHtmlPage.indexOf("<label for=\"PageNumber\"");
         let positionOfPageInput = webHtmlPage.indexOf(" id=\"pageNumber\">", positionOfImageEnd);
         let positionOfDivEnd = webHtmlPage.indexOf("</div>", positionOfPageInput);
 
         // Write HTML up to the point where the page number is shown.
-        clientResponse.write(webHtmlPage.substring(positionOfImageEnd, positionOfPageInput));
+        // clientResponse.write(webHtmlPage.substring(positionOfImageEnd, positionOfPageInput));
+        clientResponse.write("<label for=\"PageNumber\">Page</label>");
 
         // Write the page number into the input box.
+        clientResponse.write("<input type=\"text\" name=\"PageNumber\" id=\"pageNumber\" ");
         clientResponse.write("value=\"" + String(pageNumber) + "\"");
-        clientResponse.write("size=\"" + (Math.log10(pageCount) + 1) + "\"");
+        clientResponse.write("size=\"" + (Math.log10(pageCount) + 1) + "\">");
 
         // Write out the rest of the HTML.
-        clientResponse.write(webHtmlPage.substring(positionOfPageInput, positionOfDivEnd + "</div>".length));
+        // clientResponse.write(webHtmlPage.substring(positionOfPageInput, positionOfDivEnd + "</div>".length));
+        clientResponse.write("<input type=\"submit\" name=\"Submit\" value=\"Go!\"></form>");
         clientResponse.write(webHtmlPage.substring(positionOfDivEnd + "</div>".length));
         console.log("Ending prior to use");
         clientResponse.end();

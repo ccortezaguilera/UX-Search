@@ -169,7 +169,7 @@ function display_image() {
 
                     if (pageNumber === undefined) {
                         pageNumber = Math.max(pageNumber, 1);
-                    } else if (!Number.isInteger(pageNumber)) {
+                    } else if (!Number.isInteger(Number(pageNumber))) {
                         pageNumber = 1;
                     }
 

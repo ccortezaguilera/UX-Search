@@ -47,6 +47,43 @@ function parseSearchQuery(query, response) {
     });
 }
 
+/** Parses out the array of contentIDs and sends the second request 
+ * to the fotolio code. Then log the json response.
+ * @param JSONArray
+ * 
+ **/
+
+function doSecondRequest(contentIDs) {
+    var mrEdmondsGenerousHost = "andyedmonds.com";
+    var mrEdmondsGenerousPath = "/wp-content/stock/search_id.php?ids=";
+    var idArgument = "";
+    for (id in contentIDs) {
+        if (contentIDs.length == 1) {
+            idArgument += id;    
+        }
+        else {
+            idArgument += id + encodeURIComponent(",");
+        }
+    }
+    console.log(idArgument);
+    var options = {
+        hostname: mrEdmondsGenerousHost,
+        path: mrEdmondsGenerousPath + idArgument,
+        method: "GET",
+        port: "80"
+    };
+    http.get(options, function(mrEdmondResponse) {
+        var ids = "";
+        mrEdmondResponse.on("data", function(data){
+            ids += data;
+        });
+        mrEdmondResponse.on("end", function(){
+            console.log(ids);
+        });
+    });
+}
+
+
 /**
  * Sends a request to Mr. Edmonds' website, which should send back a JSON
  * formatted document. Then, write all the thumbnails to the response to the
@@ -60,9 +97,7 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
     mrEdmondResponse.on("data", function(data) {
         body += data;
     });
-    console.log(body);
     mrEdmondResponse.on("end", function() {
-        console.log("Entered MrEdmondResponseEnd");
         let thumbnailList = getThumbnails(body);
         //TODO will fix the response to write the file and place value with search query
         //clientResponse.write("<html><body>"); 
@@ -75,7 +110,7 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
     });
 }
 
-/**
+/**TODO rename function to be process JSON???
  * Returns an array of thumbnails.
  * 
  * @param {http.ServerResponse} response 
@@ -84,14 +119,19 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
 function getThumbnails(response) {
     let responseObj = JSON.parse(response);
     let keys = Object.keys(responseObj);
+    let contentIDs = new Array();
     let imageList = new Array();
     for (let key of keys) {
         var htmlTag = responseObj[key]['thumbnail_html_tag'];
+        var contentId = responseObj[key]['id'];
+        if (typeof contentId !== "undefined") {
+            contentIDs.push(contentId);
+        }
         if (typeof htmlTag !== "undefined") {
             imageList.push(htmlTag);
         }
     }
-
+    doSecondRequest(contentIDs);
     return imageList;
 }
 
@@ -122,18 +162,6 @@ function display_image() {
                     console.log(encodedQuery);
                     parseSearchQuery(encodedQuery, response);
                 });
-                
-            /*
-            fs.readFile(path.substring(1), function(err, data) {
-                if (err) {
-                    console.log(err);
-                    console.log("couldn't process request!")
-                    response.writeHead(404, {'Content-Type': 'text/html'});
-                    response.end();
-                } else {
-                    writeToClientResponse(response, data.toString(), queries);
-                }
-            });*/
         }
         else {
             fs.readFile("index.html", function(err, data) {

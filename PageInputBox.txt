@@ -1,3 +1,9 @@
+                <input type="submit" name="backPage" value="<" onclick="
+                var pageBox = document.getElementById('pageNumber');
+                pageBox.setAttribute('value', Math.max(Number(pageBox.getAttribute('value')) - 1, 1));
                 <label for="PageNumber">Page</label>
                 <input type="text" name="PageNumber" id="pageNumber">
                 <input type="submit" name="Submit" value="Go!">
+                <input type="submit" name="frontPage" value=">" onclick="
+                var pageBox = document.getElementById('pageNumber');
+                pageBox.setAttribute('value', (Number(pageBox.getAttribute('value')) + 1));">

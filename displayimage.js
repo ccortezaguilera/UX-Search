@@ -65,7 +65,6 @@ function doSecondRequest(contentIDs) {
             idArgument += id + encodeURIComponent(",");
         }
     }
-    console.log(idArgument);
     var options = {
         hostname: mrEdmondsGenerousHost,
         path: mrEdmondsGenerousPath + idArgument,

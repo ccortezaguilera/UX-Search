@@ -95,6 +95,7 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
         // Locate the HTML page display markup.
         // let positionOfImageEnd = pageBoxHtml.indexOf("<label for=\"PageNumber\"");
         let positionOfPageInput = pageBoxHtml.indexOf("id=\"pageNumber\">");
+        let positionBeforeMaxPage = pageBoxHtml.indexOf("id=\"maxPageNumber\">") + "id=\"maxPageNumber\">".length;
         // let positionOfDivEnd = pageBoxHtml.indexOf("</div>", positionOfPageInput);
 
         // Write HTML up to the point where the page number is shown.
@@ -104,9 +105,14 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
         // clientResponse.write("<input type=\"text\" name=\"PageNumber\" id=\"pageNumber\" ");
         clientResponse.write("value=\"" + pageNumber + "\" ");
         clientResponse.write("size=\"" + (Math.floor(Math.log10(pageCount)) + 1) + "\" ");
+        clientResponse.write(pageBoxHtml.substring(positionOfPageInput, positionBeforeMaxPage));
+
+        // Write out the max page number
+        clientResponse.write(`${pageCount}`);
 
         // Write out the rest of the HTML.
-        clientResponse.write(pageBoxHtml.substring(positionOfPageInput));
+        clientResponse.write(pageBoxHtml.substring(positionBeforeMaxPage));
+
         // clientResponse.write(pageBoxHtml.substring(positionOfPageInput, positionOfDivEnd + "</div>".length));
         // clientResponse.write("<input type=\"submit\" name=\"Submit\" value=\"Go!\"></form>");
         // clientResponse.write(pageBoxHtml.substring(positionOfDivEnd + "</div>".length));

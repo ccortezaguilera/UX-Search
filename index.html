@@ -8,12 +8,20 @@
             <form method="POST" action="http://localhost:8888/">
                 <label for="SearchQuery"> Search it: </label>
                 <input type="text" name="SearchQuery" id="query" onkeydown="
-                var pageBox = document.getElementById('pageNumber');
                 if (event.keyCode === 13) {
+                    if (this.value !== this.getAttribute('value')) {
+                        var pageBox = document.getElementById('pageNumber');
+                        pageBox.value = 1;
+                    }
+                }
+                ">
+                <input type="submit" name="Submit" onclick="
+                var searchBox = document.getElementById('query');
+                if (searchBox.value !== searchBox.getAttribute('value')) {
+                    var pageBox = document.getElementById('pageNumber');
                     pageBox.value = 1;
                 }
                 ">
-                <input type="submit" name="Submit">
                 <div align="left" id="imageDiv">
                 </div>
             </form>

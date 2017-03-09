@@ -7,8 +7,11 @@
                 var currentPage = pageBox.value;
                 var maxPage = document.getElementById('maxPageNumber').textContent;
 
-                if (!Number.isNaN(currentPage)) {
-                    pageBox.value = Math.min(Number(currentPage), maxPage);
+                // If enter key pressed, correct the page to be between 1 and max page.
+                if (event.keyCode === 13) {
+                    if (!Number.isNaN(currentPage)) {
+                        pageBox.value = Math.max(Math.min(Number(currentPage), Number(maxPage)), 1);
+                    }
                 }
                 ">
                 <!--<input type="submit" name="Submit" value="Go!">-->

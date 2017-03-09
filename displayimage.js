@@ -105,6 +105,7 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
         // clientResponse.write("<input type=\"text\" name=\"PageNumber\" id=\"pageNumber\" ");
         clientResponse.write("value=\"" + pageNumber + "\" ");
         clientResponse.write("size=\"" + (Math.floor(Math.log10(pageCount)) + 1) + "\" ");
+        clientResponse.write("maxlength=\"" + (Math.floor(Math.log10(pageCount)) + 2) + "\" ")
         clientResponse.write(pageBoxHtml.substring(positionOfPageInput, positionBeforeMaxPage));
 
         // Write out the max page number

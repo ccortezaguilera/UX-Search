@@ -94,7 +94,7 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
 
         // Locate the HTML page display markup.
         // let positionOfImageEnd = pageBoxHtml.indexOf("<label for=\"PageNumber\"");
-        let positionOfPageInput = pageBoxHtml.indexOf("id=\"pageNumber\">");
+        let positionOfPageInput = pageBoxHtml.indexOf("id=\"pageNumber\"");
         let positionBeforeMaxPage = pageBoxHtml.indexOf("id=\"maxPageNumber\">") + "id=\"maxPageNumber\">".length;
         // let positionOfDivEnd = pageBoxHtml.indexOf("</div>", positionOfPageInput);
 

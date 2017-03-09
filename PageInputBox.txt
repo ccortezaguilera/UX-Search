@@ -1,6 +1,6 @@
                 <input type="submit" name="backPage" value="<" onclick="
                 var pageBox = document.getElementById('pageNumber');
-                pageBox.setAttribute('value', Math.max(Number(pageBox.getAttribute('value')) - 1, 1));
+                pageBox.value = Math.max(Number(pageBox.getAttribute('value')) - 1, 1);
                 
                 // Set the search to be the original search query.
                 var searchBox = document.getElementById('query');
@@ -30,7 +30,7 @@
                 <input type="submit" name="frontPage" value=">" onclick="
                 var pageBox = document.getElementById('pageNumber');
                 var pageNumber = document.getElementById('maxPageNumber').textContent;
-                pageBox.setAttribute('value', Math.min(Number(pageBox.getAttribute('value')) + 1, Number(pageNumber)));
+                pageBox.value = Math.min(Number(pageBox.getAttribute('value')) + 1, Number(pageNumber));
                 
                 // Set the search to be the original search query.
                 var searchBox = document.getElementById('query');

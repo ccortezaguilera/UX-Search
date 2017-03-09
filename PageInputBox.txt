@@ -2,7 +2,15 @@
                 var pageBox = document.getElementById('pageNumber');
                 pageBox.setAttribute('value', Math.max(Number(pageBox.getAttribute('value')) - 1, 1));">
                 <label for="PageNumber">Page</label>
-                <input type="text" name="PageNumber" id="pageNumber">
+                <input type="text" name="PageNumber" id="pageNumber" onkeydown="
+                var pageBox = document.getElementById('pageNumber');
+                var currentPage = pageBox.value;
+                var maxPage = document.getElementById('maxPageNumber').textContent;
+
+                if (!Number.isNaN(currentPage)) {
+                    pageBox.value = Math.min(Number(currentPage), maxPage);
+                }
+                ">
                 <!--<input type="submit" name="Submit" value="Go!">-->
                 <label for="MaxPageNumberOf">of</label>
                 <label for="MaxPageNumber" id="maxPageNumber"></label>

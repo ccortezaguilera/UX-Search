@@ -1,3 +1,4 @@
+"use strict";
 var http = require("http");
 
 /**
@@ -57,7 +58,7 @@ function doSecondRequest(contentIDs) {
     var mrEdmondsGenerousHost = "andyedmonds.com";
     var mrEdmondsGenerousPath = "/wp-content/stock/search_id.php?ids=";
     var idArgument = "";
-    for (id in contentIDs) {
+    for (let id in contentIDs) {
         if (contentIDs.length == 1) {
             idArgument += id;    
         }
@@ -78,6 +79,12 @@ function doSecondRequest(contentIDs) {
         });
         mrEdmondResponse.on("end", function(){
             console.log(ids);
+            let processedIDS = JSON.parse(ids);
+            let keys = Object.keys(processedIDS);
+            for (let key in keys) {
+                console.log(key + "\n");
+                console.log(processedIDS[key] + "\n");
+            }
         });
     });
 }
@@ -97,9 +104,10 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
         body += data;
     });
     mrEdmondResponse.on("end", function() {
-        let thumbnailList = getThumbnails(body);
+        let processedJSON = processJSON(body);
         //TODO will fix the response to write the file and place value with search query
-        //clientResponse.write("<html><body>"); 
+        //clientResponse.write("<html><body>");
+        let thumbnailList = processedJSON["imageList"]; 
         for (var thumbnail of thumbnailList) {
             clientResponse.write(thumbnail);
         }
@@ -115,7 +123,7 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
  * @param {http.ServerResponse} response 
  * @returns
  */
-function getThumbnails(response) {
+function processJSON(response) {
     let responseObj = JSON.parse(response);
     let keys = Object.keys(responseObj);
     let contentIDs = new Array();
@@ -130,8 +138,11 @@ function getThumbnails(response) {
             imageList.push(htmlTag);
         }
     }
-    doSecondRequest(contentIDs);
-    return imageList;
+    var process = new Object();
+    process.imageList = imageList;
+    process.contentIDs = doSecondRequest(contentIDs);
+
+    return process;
 }
 
 // Backup code
@@ -158,7 +169,6 @@ function display_image() {
                     response.write("value=\"" + formData['SearchQuery'] + "\" ");
                     response.write(webHtmlPage.substring(positionOfTextBoxInput, positionOfBodyEnd));
 
-                    console.log(encodedQuery);
                     parseSearchQuery(encodedQuery, response);
                 });
         }

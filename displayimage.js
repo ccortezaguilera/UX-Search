@@ -34,7 +34,7 @@ function parseSearchQuery(query, response) {
 
     // Split query and add to URL
     var mrEdmondsGenerousHost = "andyedmonds.com";
-    var mrEdmondsGenerousPath = "/wp-content/stock/search.php?q=";
+    var mrEdmondsGenerousPath = "/wp-content/stock/search.php";
     var queryArgument = "";
 
     queryArgument += query;
@@ -42,7 +42,7 @@ function parseSearchQuery(query, response) {
     var options = {
         hostname: mrEdmondsGenerousHost,
         // The maximum limit is 100, so we cannot have 200.
-        path: mrEdmondsGenerousPath + queryArgument + "&limit=" + imagesPerPage + "&offset=" + ((pageNumber - 1) * imagesPerPage),
+        path: `${mrEdmondsGenerousPath}?q=${queryArgument}&limit=${imagesPerPage}&offset=${(pageNumber - 1) * imagesPerPage}`,
         method: "GET",
         port: "80"
     };
@@ -94,8 +94,8 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
 
         // Locate the HTML page display markup.
         // let positionOfImageEnd = pageBoxHtml.indexOf("<label for=\"PageNumber\"");
-        let positionOfPageInput = pageBoxHtml.indexOf("id=\"pageNumber\"");
-        let positionBeforeMaxPage = pageBoxHtml.indexOf("id=\"maxPageNumber\">") + "id=\"maxPageNumber\">".length;
+        let positionOfPageInput = pageBoxHtml.indexOf(`id="pageNumber"`);
+        let positionBeforeMaxPage = pageBoxHtml.indexOf(`id="maxPageNumber">`) + `id="maxPageNumber">`.length;
         // let positionOfDivEnd = pageBoxHtml.indexOf("</div>", positionOfPageInput);
 
         // Write HTML up to the point where the page number is shown.
@@ -103,9 +103,9 @@ function sendRequestToMrEdmond(mrEdmondResponse, clientResponse) {
 
         // Write the page number into the input box.
         // clientResponse.write("<input type=\"text\" name=\"PageNumber\" id=\"pageNumber\" ");
-        clientResponse.write("value=\"" + pageNumber + "\" ");
-        clientResponse.write("size=\"" + (Math.floor(Math.log10(pageCount)) + 1) + "\" ");
-        clientResponse.write("maxlength=\"" + (Math.floor(Math.log10(pageCount)) + 2) + "\" ")
+        clientResponse.write(`value="${pageNumber}" `);
+        clientResponse.write(`size="${Math.floor(Math.log10(pageCount)) + 1}" `);
+        clientResponse.write(`maxlength="${Math.floor(Math.log10(pageCount)) + 2}" `);
         clientResponse.write(pageBoxHtml.substring(positionOfPageInput, positionBeforeMaxPage));
 
         // Write out the max page number
@@ -182,12 +182,12 @@ function display_image() {
 
                     // Read the HTML file and select key positions in the file.
                     webHtmlPage = fs.readFileSync("index.html").toString();
-                    let positionOfTextBoxInput = webHtmlPage.indexOf("id=\"query\"");
-                    let positionOfBodyEnd = webHtmlPage.indexOf("<div align=\"left\" id=\"imageDiv\">", positionOfTextBoxInput) + "<div align=\"left\" id=\"imageDiv\">".length;
+                    let positionOfTextBoxInput = webHtmlPage.indexOf(`id="query"`);
+                    let positionOfBodyEnd = webHtmlPage.indexOf(`<div align="left" id="imageDiv">`, positionOfTextBoxInput) + `<div align="left" id="imageDiv">`.length;
 
                     // Write the search box and the orginal query in the box.
                     response.write(webHtmlPage.substring(0, positionOfTextBoxInput));
-                    response.write("value=\"" + formData['SearchQuery'] + "\" ");
+                    response.write(`value="${formData['SearchQuery']}"`);
                     response.write(webHtmlPage.substring(positionOfTextBoxInput, positionOfBodyEnd));
 
                     console.log(encodedQuery);

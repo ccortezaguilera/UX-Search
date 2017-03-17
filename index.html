@@ -7,7 +7,7 @@
         <div align="center">
             <form method="POST" action="http://localhost:8888/">
                 <label for="SearchQuery"> Search it: </label>
-                <input type="text" name="SearchQuery" id="query" onkeydown="
+                <input type="search" name="SearchQuery" id="query" onkeydown="
                 if (event.keyCode === 13) {
                     if (this.value !== this.getAttribute('value')) {
                         var pageBox = document.getElementById('pageNumber');

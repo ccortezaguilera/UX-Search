@@ -163,6 +163,7 @@ function getNumberOfResults(response) {
 var fs = require('fs');
 var url = require('url');
 var querystring = require('querystring');
+var jsdom = require('jsdom');
 function display_image() {
     http.createServer(function(request, response) {
         if (request.method === "POST") {

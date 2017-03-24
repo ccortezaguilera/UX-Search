@@ -1,5 +1,6 @@
 var http = require('http');
 var fs = require('fs');
+var jsdom = require('jsdom');
 //var express = require('express');
 /*Server will handle inital page display and submit button.*/
 function displaySearch() {
@@ -11,6 +12,20 @@ function displaySearch() {
                     response.writeHead(404, {'Content-Type': 'text/html'});
                     response.end();
                 } else {
+// ASFAFSAFFAS
+
+            var html = jsdom.env(data.toString(), function (error, window) {
+                if (error) {
+                    console.log(error);
+                } else {
+                    //console.log(window.);
+                    console.log(window.getSelection);
+                    window.close();
+                }
+            });
+
+// FASAGAFDBFD
+
                     response.writeHead(200, {'Content-Type': 'text/html'});
                     response.write(data.toString());
                     response.end();

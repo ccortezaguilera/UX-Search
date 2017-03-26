@@ -9,12 +9,12 @@
 We decided on a GitFlow approach. We have master as our main branch and then have dev be our development branch. We branch off of dev to fix bugs and develop features. We then push back to dev when features are satisfactory. We then push to master when we have accomplished an important feature that we would like to have as the release.
 
 `master` has these latest features:
-<li>
-    <ul> Basic search by query</ul>
-</li>
+<ul>
+    <li> Basic search by query</li>
+</ul>
 
 `dev` has these latest features:
-<li>
-    <ul> Basic search by query </ul>
-    <ul> Pagination </ul>
-</li>
+<ul>
+    <li> Basic search by query </li>
+    <li> Pagination </li>
+</ul>

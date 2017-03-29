@@ -1,10 +1,8 @@
 var http = require("http");
-
 // Workaround for storing page info.
 var webHtmlPage;
 var pageNumber;
 const imagesPerPage = 100;
-
 /**
  * Writes out the HTML webpage, which writes out the form, and then writes out
  * all thumbnails.
@@ -27,6 +25,9 @@ function writeToClientResponse(response, body, query) {
  * @param {http.ServerResponse} response 
  */
 function parseSearchQuery($, query, response) {
+ * @param {string} query 
+ * @param {http.ServerResponse} response 
+ */
     // Prevent undefined query from being used to mess with the server
     if (query === undefined || query === null) {
         response.end();
@@ -122,7 +123,6 @@ function getThumbnails(response) {
 
     return imageList;
 }
-
 /**
  * Returns the number of results on a page.
  * 
@@ -139,7 +139,6 @@ function getNumberOfResults(response) {
 
     return 0;
 }
-
 // Backup code
 var fs = require('fs');
 var url = require('url');
@@ -174,18 +173,6 @@ function display_image() {
                     console.log(encodedQuery);
                     parseSearchQuery($, encodedQuery, response);
                 });
-
-                /*
-                fs.readFile(path.substring(1), function(err, data) {
-                    if (err) {
-                        console.log(err);
-                        console.log("couldn't process request!")
-                        response.writeHead(404, {'Content-Type': 'text/html'});
-                        response.end();
-                    } else {
-                        writeToClientResponse(response, data.toString(), queries);
-                    }
-                });*/
             }
             else {
                 fs.readFile("index.html", function (err, data) {

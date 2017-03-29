@@ -25,9 +25,6 @@ function writeToClientResponse(response, body, query) {
  * @param {http.ServerResponse} response 
  */
 function parseSearchQuery($, query, response) {
- * @param {string} query 
- * @param {http.ServerResponse} response 
- */
     // Prevent undefined query from being used to mess with the server
     if (query === undefined || query === null) {
         response.end();

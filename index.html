@@ -5,7 +5,7 @@
     </head>
     <body>
         <div align="center">
-            <form method="POST" action="http://localhost:8888/">
+            <form method="POST" id="mainForm" action="http://localhost:8888/">
                 <label for="SearchQuery"> Search it: </label>
                 <input type="search" name="SearchQuery" id="query" onkeydown="
                 if (event.keyCode === 13) {
@@ -22,6 +22,7 @@
                     pageBox.value = 1;
                 }
                 ">
+                <input type="hidden" name="URLQuery" id="urlQuery">
                 <div align="left" id="imageDiv">
                 </div>
                 <div id="pageNumberArea">

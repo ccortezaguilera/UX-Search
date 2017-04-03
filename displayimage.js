@@ -77,7 +77,11 @@ function sendRequestToMrEdmond($, mrEdmondResponse, clientResponse) {
         // Add the javascript to the images
         for (let thumbnailName in thumbnails) {
             if (thumbnails[thumbnailName].hasOwnProperty("attribs") && thumbnails[thumbnailName]["attribs"].hasOwnProperty("src")) {
-                thumbnails.get(thumbnailName).attribs['onmouseover'] = `console.log(this.getAttribute('src'));`
+                thumbnails.get(thumbnailName).attribs['onclick'] = `
+                document.getElementById('urlQuery').value = this.getAttribute('src');
+                // console.log(document.getElementById('urlQuery').value);
+                document.getElementById('mainForm').submit();
+                `
             }
         }
 

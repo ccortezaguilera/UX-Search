@@ -71,7 +71,15 @@ function sendRequestToMrEdmond($, mrEdmondResponse, clientResponse) {
         
         // Write images
         let thumbnailList = getThumbnails(body);
-        $('#imageDiv').append(thumbnailList);
+        let thumbnailsHtml = $('#imageDiv').append(thumbnailList);
+        let thumbnails = thumbnailsHtml.children();
+
+        // Add the javascript to the images
+        for (let thumbnailName in thumbnails) {
+            if (thumbnails[thumbnailName].hasOwnProperty("attribs") && thumbnails[thumbnailName]["attribs"].hasOwnProperty("src")) {
+                thumbnails.get(thumbnailName).attribs['onmouseover'] = `console.log(this.getAttribute('src'));`
+            }
+        }
 
         // Write page numbers
 

@@ -1,6 +1,5 @@
 var http = require("http");
 // Workaround for storing page info.
-var webHtmlPage;
 const imagesPerPage = 100;
 const adobeMode = false;
 
@@ -19,29 +18,26 @@ function parseSearchQuery($, fullQuery, response) {
     if (adobeMode) {
         host = "stock.adobe.io";
         fullPath = "/Rest/Media/1/Search/Files?";
-        pathArguments[`search_parameters[words]`]= fullQuery.tagQuery;
+        pathArguments['search_parameters%5Bwords%5D'] = fullQuery.tagQuery;
+        //pathArguments[`search_parameters[limit]`] = imagesPerPage;
+        //pathArguments[`search_parameters[offset]`] = (fullQuery.pageNumber - 1) * pathArguments[`search_parameters[limit]`];
+        //pathArguments[`search_parameters[similar_url]`] = fullQuery.urlQuery;
     } else {
         host = "andyedmonds.com";
         fullPath = "/wp-content/stock/search.php?";
         pathArguments[`q`] = fullQuery.tagQuery;
         pathArguments[`limit`] = imagesPerPage;
-        pathArguments[`offset`] = (fullQuery.pageNumber - 1) * imagesPerPage;
+        pathArguments[`offset`] = (fullQuery.pageNumber - 1) * pathArguments[`limit`];
     }
     
     for (let key in pathArguments) {
         fullPath += `${key}=${pathArguments[key]}&`;
     }
-    
-
-    // 
 
     var options = {
         hostname: host,
-        // The maximum limit is 100, so we cannot have 200.
-        // path: `${adobeStockPath}?q=${queryArgument}&limit=${imagesPerPage}&offset=${(pageNumber - 1) * imagesPerPage}&search_parameters[similar_url]=${fullQuery.urlQuery}`,        
         path: fullPath,
         method: "GET",
-        port: "80",
         headers: {
             'X-Product': 'Photoshop/15.2.0',
             'x-api-key': '196dd2bfb89244c694211114553dae9e'
@@ -67,10 +63,9 @@ function sendRequestToMrEdmond($, mrEdmondResponse, clientResponse) {
     mrEdmondResponse.on("data", function (data) {
         body += data;
     });
-    console.log(body);
+    
     mrEdmondResponse.on("end", function () {
         console.log("Entered MrEdmondResponseEnd");
-        
         // Write images
         let thumbnailList = getThumbnails(body);
         let thumbnailsHtml = $('#imageDiv').append(thumbnailList);
@@ -82,6 +77,14 @@ function sendRequestToMrEdmond($, mrEdmondResponse, clientResponse) {
                 thumbnails.get(thumbnailName).attribs['onclick'] = `
                 document.getElementById('urlQuery').value = this.getAttribute('src');
                 document.getElementById('mainForm').submit();
+                `;
+                thumbnails.get(thumbnailName).attribs['onmouseover'] = `
+                this.width += 50;
+                this.height += 50;
+                `;
+                thumbnails.get(thumbnailName).attribs['onmouseout'] = `
+                this.width -= 50;
+                this.height -= 50;
                 `;
             }
         }
@@ -173,7 +176,7 @@ function display_image() {
                     }
 
                     // Read the HTML file and select key positions in the file.
-                    webHtmlPage = fs.readFileSync("index.html").toString();
+                    let webHtmlPage = fs.readFileSync("index.html").toString();
                     var $ = cheerio.load(webHtmlPage);
 
                     // Add the orginal query back to the box.

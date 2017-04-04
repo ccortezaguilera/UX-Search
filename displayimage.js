@@ -1,49 +1,51 @@
 var http = require("http");
 // Workaround for storing page info.
 var webHtmlPage;
-var pageNumber;
 const imagesPerPage = 100;
-/**
- * Writes out the HTML webpage, which writes out the form, and then writes out
- * all thumbnails.
- * 
- * @param {http.ServerResponse} response 
- * @param {string} body
- * @param {string} query 
- */
-function writeToClientResponse(response, body, query) {
-    response.writeHead(200, { 'Content-Type': 'text/html' });
-    response.write(body.slice(0, body.indexOf("</body>")));
-    parseSearchQuery(query, response);
-}
+const adobeMode = false;
 
 /**
  * Parses the search query and write the images to the HTML page.
  * 
  * @param {CheerioStatic} $
- * @param {string} query 
+ * @param {any} fullQuery 
  * @param {http.ServerResponse} response 
  */
-function parseSearchQuery($, query, response) {
-    // Prevent undefined query from being used to mess with the server
-    if (query === undefined || query === null) {
-        response.end();
-        return;
-    }
-
+function parseSearchQuery($, fullQuery, response) {
     // Split query and add to URL
-    var mrEdmondsGenerousHost = "andyedmonds.com";
-    var mrEdmondsGenerousPath = "/wp-content/stock/search.php";
-    var queryArgument = "";
+    let host;
+    let fullPath;
+    let pathArguments = {};
+    if (adobeMode) {
+        host = "stock.adobe.io";
+        fullPath = "/Rest/Media/1/Search/Files?";
+        pathArguments[`search_parameters[words]`]= fullQuery.tagQuery;
+    } else {
+        host = "andyedmonds.com";
+        fullPath = "/wp-content/stock/search.php?";
+        pathArguments[`q`] = fullQuery.tagQuery;
+        pathArguments[`limit`] = imagesPerPage;
+        pathArguments[`offset`] = (fullQuery.pageNumber - 1) * imagesPerPage;
+    }
+    
+    for (let key in pathArguments) {
+        fullPath += `${key}=${pathArguments[key]}&`;
+    }
+    
 
-    queryArgument += query;
+    // 
 
     var options = {
-        hostname: mrEdmondsGenerousHost,
+        hostname: host,
         // The maximum limit is 100, so we cannot have 200.
-        path: `${mrEdmondsGenerousPath}?q=${queryArgument}&limit=${imagesPerPage}&offset=${(pageNumber - 1) * imagesPerPage}`,
+        // path: `${adobeStockPath}?q=${queryArgument}&limit=${imagesPerPage}&offset=${(pageNumber - 1) * imagesPerPage}&search_parameters[similar_url]=${fullQuery.urlQuery}`,        
+        path: fullPath,
         method: "GET",
-        port: "80"
+        port: "80",
+        headers: {
+            'X-Product': 'Photoshop/15.2.0',
+            'x-api-key': '196dd2bfb89244c694211114553dae9e'
+        }
     };
 
     http.get(options, function (mrEdmondResponse) {
@@ -79,9 +81,8 @@ function sendRequestToMrEdmond($, mrEdmondResponse, clientResponse) {
             if (thumbnails[thumbnailName].hasOwnProperty("attribs") && thumbnails[thumbnailName]["attribs"].hasOwnProperty("src")) {
                 thumbnails.get(thumbnailName).attribs['onclick'] = `
                 document.getElementById('urlQuery').value = this.getAttribute('src');
-                // console.log(document.getElementById('urlQuery').value);
                 document.getElementById('mainForm').submit();
-                `
+                `;
             }
         }
 
@@ -163,6 +164,7 @@ function display_image() {
                     let formData = querystring.parse(data.toString());
                     let encodedQuery = encodeURIComponent(formData['SearchQuery']);
                     pageNumber = encodeURIComponent(formData['PageNumber']);
+                    let encodedUrl = encodeURIComponent(formData['URLQuery']);
 
                     if (pageNumber === undefined) {
                         pageNumber = Math.max(pageNumber, 1);
@@ -179,8 +181,13 @@ function display_image() {
                         $('#query').val(formData['SearchQuery']);
                     }
 
-                    console.log(encodedQuery);
-                    parseSearchQuery($, encodedQuery, response);
+                    var fullQuery = {
+                        tagQuery: (encodedQuery !== undefined) ? encodedQuery : "",
+                        urlQuery: (encodedUrl !== undefined) ? encodedUrl : "",
+                        pageNumber: pageNumber
+                    };
+
+                    parseSearchQuery($, fullQuery, response);
                 });
             }
             else {

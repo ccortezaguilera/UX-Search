@@ -1,7 +1,8 @@
 var https = require("https");
 var http = require("http");
+var cheerio = require('cheerio');
 // Workaround for storing page info.
-const adobeMode = true;
+var adobeMode = false;
 const imagesPerPage = adobeMode ? 64 : 100;
 
 /**
@@ -167,7 +168,6 @@ function getNumberOfResults(response) {
 var fs = require('fs');
 var url = require('url');
 var querystring = require('querystring');
-var cheerio = require('cheerio');
 function display_image() {
     http.createServer(function (request, response) {
         if (request.method === "POST") {
@@ -190,6 +190,10 @@ function display_image() {
                     let webHtmlPage = fs.readFileSync("index.html").toString();
                     var $ = cheerio.load(webHtmlPage);
 
+                    //get the adobe checkbox
+                    adobeMode = $('input[type="checkbox"]').prop('checked')? true : false;
+                    console.log($('#check_id').is(":checked"));
+                    console.log("AdobeMode: " + adobeMode);
                     // Add the orginal query back to the box.
                     if (formData['SearchQuery']) {
                         $('#query').val(formData['SearchQuery']);

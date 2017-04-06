@@ -1,7 +1,8 @@
+var https = require("https");
 var http = require("http");
 // Workaround for storing page info.
-const imagesPerPage = 100;
-const adobeMode = false;
+const adobeMode = true;
+const imagesPerPage = adobeMode ? 64 : 100;
 
 /**
  * Parses the search query and write the images to the HTML page.
@@ -18,12 +19,12 @@ function parseSearchQuery($, fullQuery, response) {
     if (adobeMode) {
         host = "stock.adobe.io";
         fullPath = "/Rest/Media/1/Search/Files?";
-        pathArguments['search_parameters%5Bwords%5D'] = fullQuery.tagQuery;
-        //pathArguments[`search_parameters[limit]`] = imagesPerPage;
-        //pathArguments[`search_parameters[offset]`] = (fullQuery.pageNumber - 1) * pathArguments[`search_parameters[limit]`];
-        //pathArguments[`search_parameters[similar_url]`] = fullQuery.urlQuery;
+        pathArguments['search_parameters[words]'] = fullQuery.tagQuery;
+        pathArguments[`search_parameters[limit]`] = imagesPerPage;
+        pathArguments[`search_parameters[offset]`] = (fullQuery.pageNumber - 1) * pathArguments[`search_parameters[limit]`];
+        pathArguments[`search_parameters[similar_url]`] = fullQuery.urlQuery;
     } else {
-        host = "andyedmonds.com";
+        host = "www.andyedmonds.com";
         fullPath = "/wp-content/stock/search.php?";
         pathArguments[`q`] = fullQuery.tagQuery;
         pathArguments[`limit`] = imagesPerPage;
@@ -44,9 +45,15 @@ function parseSearchQuery($, fullQuery, response) {
         }
     };
 
-    http.get(options, function (mrEdmondResponse) {
-        sendRequestToMrEdmond($, mrEdmondResponse, response);
-    });
+    if (adobeMode) {
+        https.get(options, function (mrEdmondResponse) {
+            sendRequestToMrEdmond($, mrEdmondResponse, response);
+        });
+    } else {
+        http.get(options, function (mrEdmondResponse) {
+            sendRequestToMrEdmond($, mrEdmondResponse, response);
+        });
+    }
 }
 
 /**
@@ -78,13 +85,14 @@ function sendRequestToMrEdmond($, mrEdmondResponse, clientResponse) {
                 document.getElementById('urlQuery').value = this.getAttribute('src');
                 document.getElementById('mainForm').submit();
                 `;
+                thumbnails.get(thumbnailName).attribs['class'] = `result-image`;
                 thumbnails.get(thumbnailName).attribs['onmouseover'] = `
-                this.width += 50;
-                this.height += 50;
+                //this.width += 50;
+                //this.height += 50;
                 `;
                 thumbnails.get(thumbnailName).attribs['onmouseout'] = `
-                this.width -= 50;
-                this.height -= 50;
+                //this.width -= 50;
+                //this.height -= 50;
                 `;
             }
         }
@@ -125,6 +133,9 @@ function sendRequestToMrEdmond($, mrEdmondResponse, clientResponse) {
  */
 function getThumbnails(response) {
     let responseObj = JSON.parse(response);
+    if (adobeMode) {
+        responseObj = responseObj['files'];
+    }
     let keys = Object.keys(responseObj);
     let imageList = new Array();
     for (let key of keys) {

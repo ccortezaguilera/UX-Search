@@ -15,7 +15,11 @@
 | **dev**       |   2.2   |  development  |
 
 We decided on a GitFlow approach. We have master as our main branch and then have dev be our development branch. We branch off of dev to fix bugs and develop features. We then push back to dev when features are satisfactory. We then push to master when we have accomplished an important feature that we would like to have as the release.
-## master 
----
+## master
+Features: Search by query
+## dev
+Features: Search by query
+
+paginating
 ## License
 **MIT**

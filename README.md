@@ -1,13 +1,13 @@
 # UX-Search
 **This project will attempt to enhance stock content search at Adobe Stock with a focus on exposing tags, a key set of available metadata not currently used, to the user and encouraging multimedia queries of both keywords and an image.**
 ### Installing
-`git clone the repository`
+`$ git clone the repository`
 <br>
-`cd UX-Search`
+`$ cd UX-Search`
 <br>
-`npm update`
+`$ npm update`
 <br>
-`node server.js`
+`$ node server.js`
 ### Branches
 | Main Branches | version | Description   |
 | ------------- |:-------:|:-------------:|
@@ -26,3 +26,5 @@ We decided on a GitFlow approach. We have master as our main branch and then hav
     <li> Basic search by query </li>
     <li> Pagination </li>
 </ul>
+## License
+**MIT**

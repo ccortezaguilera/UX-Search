@@ -11,17 +11,17 @@
 ### Branches
 | Main Branches | version | Description   |
 | ------------- |:-------:|:-------------:|
-| `master`      |   1.1   |**main branch**|
-| `dev`         |   2.1   |  development  |
+| master      |   1.1   |**main branch**|
+| dev         |   2.1   |  development  |
 
 We decided on a GitFlow approach. We have master as our main branch and then have dev be our development branch. We branch off of dev to fix bugs and develop features. We then push back to dev when features are satisfactory. We then push to master when we have accomplished an important feature that we would like to have as the release.
 
-`master` has these latest features:
+**master** has these latest features:
 <ul>
     <li> Basic search by query</li>
 </ul>
 
-`dev` has these latest features:
+**dev** has these latest features:
 <ul>
     <li> Basic search by query </li>
     <li> Pagination </li>

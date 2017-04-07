@@ -2,7 +2,7 @@ var https = require("https");
 var http = require("http");
 var cheerio = require('cheerio');
 // Workaround for storing page info.
-var adobeMode = false;
+var adobeMode = true;
 const imagesPerPage = adobeMode ? 64 : 100;
 
 /**
@@ -121,6 +121,8 @@ function sendRequestToMrEdmond($, mrEdmondResponse, clientResponse) {
         $('#maxPageNumber').text(`${pageCount}`);
 
         console.log("Ending prior to use");
+        var result = adobeMode ? $('#check_id').prop("checked", true): $('#check_id').prop("checked", false);
+        console.log($("#check_id").attr("checked", "checked"));
         clientResponse.write($.html());
         clientResponse.end();
     });
@@ -191,9 +193,8 @@ function display_image() {
                     var $ = cheerio.load(webHtmlPage);
 
                     //get the adobe checkbox
-                    adobeMode = $('input[type="checkbox"]').prop('checked')? true : false;
-                    console.log($('#check_id').is(":checked"));
-                    console.log("AdobeMode: " + adobeMode);
+                    adobeMode = formData['adobe'] ? true : false;
+                    //console.log("AdobeMode: " + adobeMode);
                     // Add the orginal query back to the box.
                     if (formData['SearchQuery']) {
                         $('#query').val(formData['SearchQuery']);

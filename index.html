@@ -5,9 +5,65 @@
     </head>
     <body>
         <div align="center">
-            <form method="POST" action="http://localhost:8080/">
-                <label for="SearchQuery"> Search it: </label><input type="text" name="SearchQuery" id="query">
-                <input type="submit" name="Submit">
+            <form method="POST" action="http://localhost:8888/">
+                <label for="SearchQuery"> Search it: </label>
+                <input type="search" name="SearchQuery" id="query" onkeydown="
+                if (event.keyCode === 13) {
+                    if (this.value !== this.getAttribute('value')) {
+                        var pageBox = document.getElementById('pageNumber');
+                        pageBox.value = 1;
+                    }
+                }
+                ">
+                <input type="submit" name="Submit" onclick="
+                var searchBox = document.getElementById('query');
+                if (searchBox.value !== searchBox.getAttribute('value')) {
+                    var pageBox = document.getElementById('pageNumber');
+                    pageBox.value = 1;
+                }
+                ">
+                <div align="left" id="imageDiv">
+                </div>
+                <div id="pageNumberArea">
+                    <input type="submit" name="backPage" value="<" onclick="
+                    var pageBox = document.getElementById('pageNumber');
+                    pageBox.value = Math.max(Number(pageBox.getAttribute('value')) - 1, 1);
+                    
+                    // Set the search to be the original search query.
+                    var searchBox = document.getElementById('query');
+                    searchBox.value = searchBox.getAttribute('value');
+                    ">
+                    <label for="PageNumber">Page</label>
+                    <input type="text" name="PageNumber" id="pageNumber" onkeydown="
+                    var pageBox = document.getElementById('pageNumber');
+                    var currentPage = pageBox.value;
+                    var maxPage = document.getElementById('maxPageNumber').textContent;
+
+                    // If enter key pressed, correct the page to be between 1 and max page.
+                    if (event.keyCode === 13) {
+                        if (!Number.isNaN(currentPage)) {
+                            pageBox.value = Math.max(Math.min(Number(currentPage), Number(maxPage)), 1);
+                        }
+
+                        // Set the search to be the original search query.
+                        var searchBox = document.getElementById('query');
+                        searchBox.value = searchBox.getAttribute('value');
+                    }
+
+                    ">
+                    <!--<input type="submit" name="Submit" value="Go!">-->
+                    <label for="MaxPageNumberOf">of</label>
+                    <label for="MaxPageNumber" id="maxPageNumber"></label>
+                    <input type="submit" name="frontPage" value=">" onclick="
+                    var pageBox = document.getElementById('pageNumber');
+                    var pageNumber = document.getElementById('maxPageNumber').textContent;
+                    pageBox.value = Math.min(Number(pageBox.getAttribute('value')) + 1, Number(pageNumber));
+                    
+                    // Set the search to be the original search query.
+                    var searchBox = document.getElementById('query');
+                    searchBox.value = searchBox.getAttribute('value');
+                    ">
+                </div>
             </form>
         </div>
     </body>

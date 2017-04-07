@@ -1,5 +1,6 @@
 var http = require('http');
 var fs = require('fs');
+var cheerio = require('cheerio');
 //var express = require('express');
 /*Server will handle inital page display and submit button.*/
 function displaySearch() {
@@ -11,8 +12,11 @@ function displaySearch() {
                     response.writeHead(404, {'Content-Type': 'text/html'});
                     response.end();
                 } else {
+                    var $ = cheerio.load(data.toString());
+                    $('#pageNumberArea').remove();
+
                     response.writeHead(200, {'Content-Type': 'text/html'});
-                    response.write(data.toString());
+                    response.write($.html());
                     response.end();
                 }
             });
@@ -21,6 +25,6 @@ function displaySearch() {
             response.writeHead(404);
             response.end("FILE NOT FOUND");
         }
-    }).listen(5070);
+    }).listen(8080);
 }
 module.exports = displaySearch;

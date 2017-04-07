@@ -18,7 +18,3 @@ We decided on a GitFlow approach. We have master as our main branch and then hav
     <li> Basic search by query </li>
     <li> Pagination </li>
 </ul>
-### Installing
-```git clone the repository.
-```cd UX-Search\
-```npm update

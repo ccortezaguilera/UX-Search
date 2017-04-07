@@ -26,5 +26,7 @@ We decided on a GitFlow approach. We have master as our main branch and then hav
     <li> Basic search by query </li>
     <li> Pagination </li>
 </ul>
+<br>
 ## License
+<br>
 **MIT**

@@ -1,7 +1,10 @@
 var https = require("https");
 var http = require("http");
 var cheerio = require('cheerio');
+var express = require('express');
+var app = express();
 // Workaround for storing page info.
+var jsonResponse = null;
 const adobeMode = true;
 const imagesPerPage = adobeMode ? 64 : 100;
 
@@ -75,7 +78,10 @@ function sendRequestToMrEdmond($, mrEdmondResponse, clientResponse) {
     mrEdmondResponse.on("end", function () {
         console.log("Entered MrEdmondResponseEnd");
         // Write images
-        let thumbnailList = getThumbnails(body);
+        jsonResponse = body;
+        let obj = getThumbnails(body);
+        let thumbnailList = obj["tags"];
+        let tagInfo = obj["ids"];
         let thumbnailsHtml = $('#imageDiv').append(thumbnailList);
         let thumbnails = thumbnailsHtml.children();
 
@@ -119,8 +125,13 @@ function sendRequestToMrEdmond($, mrEdmondResponse, clientResponse) {
 
         // Write out the max page number
         $('#maxPageNumber').text(`${pageCount}`);
-
+        app.use(function(req, res, next) {
+            res.cookie("tag", tagInfo,{maxAge: 900000, httpOnly: false});
+            res.cookie("jsonResponse", jsonResponse, {maxAge: 900000, httpOnly: false});
+            console("cookie created");
+        });
         console.log("Ending prior to use");
+        clientResponse.writeHead(200, {'Content-Type': 'text/html' });
         clientResponse.write($.html());
         clientResponse.end();
     });
@@ -139,14 +150,24 @@ function getThumbnails(response) {
     }
     let keys = Object.keys(responseObj);
     let imageList = new Array();
+    let idList = new Array();
     for (let key of keys) {
         var htmlTag = responseObj[key]['thumbnail_html_tag'];
+        var id = responseObj[key]['id'];
         if (typeof htmlTag !== "undefined") {
             imageList.push(htmlTag);
         }
+        if (typeof id !== "undefined") {
+            idList.push(id);
+        }
     }
+    var ids = idList.join(",");
+    var obj = {
+        ids:ids,
+        tags:imageList
+    };
 
-    return imageList;
+    return obj;
 }
 /**
  * Returns the number of results on a page.
@@ -172,7 +193,7 @@ function display_image() {
     http.createServer(function (request, response) {
         if (request.method === "POST") {
             if (request.url == "/") {
-                response.writeHead(200, { 'Content-Type': 'text/html' });
+                //response.writeHead(200, );
                 request.on('data', function (data) {
                     // Obtain the query information.
                     let formData = querystring.parse(data.toString());

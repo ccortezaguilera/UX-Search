@@ -2,7 +2,7 @@ var https = require("https");
 var http = require("http");
 var cheerio = require('cheerio');
 // Workaround for storing page info.
-var adobeMode = true;
+const adobeMode = true;
 const imagesPerPage = adobeMode ? 64 : 100;
 
 /**
@@ -191,10 +191,6 @@ function display_image() {
                     // Read the HTML file and select key positions in the file.
                     let webHtmlPage = fs.readFileSync("index.html").toString();
                     var $ = cheerio.load(webHtmlPage);
-
-                    //get the adobe checkbox
-                    adobeMode = formData['adobe'] ? true : false;
-                    //console.log("AdobeMode: " + adobeMode);
                     // Add the orginal query back to the box.
                     if (formData['SearchQuery']) {
                         $('#query').val(formData['SearchQuery']);

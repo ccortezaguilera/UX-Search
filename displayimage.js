@@ -2,7 +2,7 @@ var https = require("https");
 var http = require("http");
 var cheerio = require('cheerio');
 // Workaround for storing page info.
-const adobeMode = true;
+const adobeMode = false;
 const imagesPerPage = adobeMode ? 64 : 100;
 
 /**
@@ -86,30 +86,17 @@ function sendRequestToMrEdmond($, mrEdmondResponse, clientResponse) {
                 document.getElementById('urlQuery').value = this.getAttribute('src');
                 document.getElementById('mainForm').submit();
                 `;
-                thumbnails.get(thumbnailName).attribs['class'] = `result-image`;
-                thumbnails.get(thumbnailName).attribs['onmouseover'] = `
-                //this.width += 50;
-                //this.height += 50;
-                `;
-                thumbnails.get(thumbnailName).attribs['onmouseout'] = `
-                //this.width -= 50;
-                //this.height -= 50;
-                `;
             }
         }
+
+        // thumbnails.removeAttr('width').removeAttr('height');
+        $('#imageDiv').children('img').addClass('resultImage');
 
         // Write page numbers
 
         // Check for valid page number inputs.
         let resultsCount = getNumberOfResults(body);
         let pageCount = Math.max(Math.ceil(resultsCount / imagesPerPage), 1);
-
-        // if (pageNumber === undefined || Number(pageNumber) < 1) {
-        //     pageNumber = "1";
-        // } 
-        // else if (pageNumber > pageCount) {
-        //     pageNumber = String(pageCount);
-        // }
 
         // Write the page number into the input box.
         var pageNumberBox = $('#pageNumber');

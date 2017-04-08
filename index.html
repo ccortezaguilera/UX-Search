@@ -2,27 +2,56 @@
 <html>
     <head>
         <meta charset="utf8">
+        <!--<link rel="stylesheet" href="style.css">-->
+        <style>
+            #pageNumberArea > * {
+                font-size: 24pt;
+            }
+
+            #searchFull > * {
+                font-size: 24pt;
+            }
+
+            #searchFull > input[type="submit"] {
+                width: 120px;
+                font: 24pt;
+            }
+
+            body {
+                margin: 10px;
+            }
+            
+            .resultImage {
+                width: 10%;
+                margin-left: 10px;
+                margin-right: 10px;
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }
+        </style>
     </head>
     <body>
         <div align="center">
             <form method="GET" id="mainForm" action="http://localhost:8888/">
-                <label for="SearchQuery"> Search it: </label>
-                <input type="search" name="q" id="query" onkeydown="
-                if (event.keyCode === 13) {
-                    if (this.value !== this.getAttribute('value')) {
+                <div id="searchFull">
+                    <label for="SearchQuery"> Search it: </label>
+                    <input type="search" name="q" id="query" onkeydown="
+                    if (event.keyCode === 13) {
+                        if (this.value !== this.getAttribute('value')) {
+                            var pageBox = document.getElementById('pageNumber');
+                            pageBox.value = 1;
+                        }
+                    }
+                    ">
+                    <input type="submit" name="Submit" onclick="
+                    var searchBox = document.getElementById('query');
+                    if (searchBox.value !== searchBox.getAttribute('value')) {
                         var pageBox = document.getElementById('pageNumber');
                         pageBox.value = 1;
                     }
-                }
-                ">
-                <input type="submit" name="Submit" onclick="
-                var searchBox = document.getElementById('query');
-                if (searchBox.value !== searchBox.getAttribute('value')) {
-                    var pageBox = document.getElementById('pageNumber');
-                    pageBox.value = 1;
-                }
-                ">
-                <input type="hidden" name="URLQuery" id="urlQuery">
+                    ">
+                    <input type="hidden" name="URLQuery" id="urlQuery">
+                </div>
                 <div align="left" id="imageDiv">
                 </div>
                 <div id="pageNumberArea">

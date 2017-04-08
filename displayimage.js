@@ -51,11 +51,11 @@ function parseSearchQuery($, fullQuery, response) {
 
     if (adobeMode) {
         https.get(options, function (mrEdmondResponse) {
-            sendRequestToMrEdmond($, mrEdmondResponse, response);
+            sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, response);
         });
     } else {
         http.get(options, function (mrEdmondResponse) {
-            sendRequestToMrEdmond($, mrEdmondResponse, response);
+            sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, response);
         });
     }
 }
@@ -69,14 +69,14 @@ function parseSearchQuery($, fullQuery, response) {
  * @param {http.ServerResponse} mrEdmondResponse 
  * @param {http.ServerResponse} clientResponse 
  */
-function sendRequestToMrEdmond($, mrEdmondResponse, clientResponse) {
+function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
     var body = "";
     mrEdmondResponse.on("data", function (data) {
         body += data;
     });
     
     mrEdmondResponse.on("end", function () {
-        console.log("Entered MrEdmondResponseEnd");
+        // console.log("Entered MrEdmondResponseEnd");
         // Write images
         jsonResponse = body;
         let obj = getThumbnails(body);
@@ -119,7 +119,7 @@ function sendRequestToMrEdmond($, mrEdmondResponse, clientResponse) {
 
         // Write the page number into the input box.
         var pageNumberBox = $('#pageNumber');
-        pageNumberBox.val(pageNumber);
+        pageNumberBox.val(fullQuery.pageNumber);
         pageNumberBox.attr('size', Math.floor(Math.log10(pageCount)) + 1);
         pageNumberBox.attr('maxlength', Math.floor(Math.log10(pageCount)) + 2);
 
@@ -191,53 +191,70 @@ var url = require('url');
 var querystring = require('querystring');
 function display_image() {
     http.createServer(function (request, response) {
-        if (request.method === "POST") {
-            if (request.url == "/") {
+        if (request.method === "GET") {
+           // if (request.url == "") {
                 //response.writeHead(200, );
+                let body = "";
                 request.on('data', function (data) {
-                    // Obtain the query information.
-                    let formData = querystring.parse(data.toString());
-                    let encodedQuery = encodeURIComponent(formData['SearchQuery']);
-                    pageNumber = encodeURIComponent(formData['PageNumber']);
-                    let encodedUrl = encodeURIComponent(formData['URLQuery']);
+                    body += data.toString();
+                });
+                request.on('end', function () {
+                    let separatedUrl = url.parse(request.url);
+                    let path = separatedUrl.pathname;
+                    let rawQueries = separatedUrl.query;
 
-                    if (pageNumber === undefined) {
-                        pageNumber = Math.max(pageNumber, 1);
-                    } else if (!Number.isInteger(Number(pageNumber))) {
-                        pageNumber = 1;
+                    // Obtain the query information.
+                    let formData = querystring.parse(rawQueries);
+                    let encodedQuery = encodeURIComponent(formData['q']);
+                    let encodedPageNumber = encodeURIComponent(formData['PageNumber']);
+                    let encodedUrl = encodeURIComponent(formData['URLQuery']);
+                    
+                    if (encodedPageNumber === undefined) {
+                        encodedPageNumber = Math.max(encodedPageNumber, 1);
+                    } else if (!Number.isInteger(Number(encodedPageNumber))) {
+                        encodedPageNumber = 1;
                     }
 
                     // Read the HTML file and select key positions in the file.
                     let webHtmlPage = fs.readFileSync("index.html").toString();
                     var $ = cheerio.load(webHtmlPage);
+
+                    // If raw queries is bad, then write as if it were the 8080 port.
+                    if (!rawQueries) {
+                        $('#pageNumberArea').remove();
+                        response.write($.html());
+                        response.end();
+                        return;
+                    }
+
                     // Add the orginal query back to the box.
-                    if (formData['SearchQuery']) {
-                        $('#query').val(formData['SearchQuery']);
+                    if (formData['q']) {
+                        $('#query').val(formData['q']);
                     }
 
                     var fullQuery = {
-                        tagQuery: (encodedQuery !== undefined) ? encodedQuery : "",
-                        urlQuery: (encodedUrl !== undefined) ? encodedUrl : "",
-                        pageNumber: pageNumber
-                    };
+                        tagQuery: (typeof encodedQuery !== "undefined") ? encodedQuery : "",
+                        urlQuery: (typeof encodedUrl !== "undefined") ? encodedUrl : "",
+                        pageNumber: encodedPageNumber
+                    };console.log(fullQuery);
 
                     parseSearchQuery($, fullQuery, response);
                 });
-            }
-            else {
-                fs.readFile("index.html", function (err, data) {
-                    if (err) {
-                        console.log(err);
-                        console.log("We entered here because there was extra and we couldn't open file");
-                        response.writeHead(404, { 'Content-Type': 'text/html' });
-                        response.end();
-                    } else {
-                        response.writeHead(200, { 'Content-Type': 'text/html' });
-                        response.write(data.toString());
-                        response.end();
-                    }
-                });
-            }
+            // }
+            // else {
+            //     fs.readFile("index.html", function (err, data) {
+            //         if (err) {
+            //             console.log(err);
+            //             console.log("We entered here because there was extra and we couldn't open file");
+            //             response.writeHead(404, { 'Content-Type': 'text/html' });
+            //             response.end();
+            //         } else {
+            //             response.writeHead(200, { 'Content-Type': 'text/html' });
+            //             response.write(data.toString());
+            //             response.end();
+            //         }
+            //     });
+            // }
 
         }
 

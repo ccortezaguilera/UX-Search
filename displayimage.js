@@ -121,8 +121,6 @@ function sendRequestToMrEdmond($, mrEdmondResponse, clientResponse) {
         $('#maxPageNumber').text(`${pageCount}`);
 
         console.log("Ending prior to use");
-        var result = adobeMode ? $('#check_id').prop("checked", true): $('#check_id').prop("checked", false);
-        console.log($("#check_id").attr("checked", "checked"));
         clientResponse.write($.html());
         clientResponse.end();
     });

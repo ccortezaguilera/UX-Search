@@ -32,10 +32,10 @@
     </head>
     <body>
         <div align="center">
-            <form method="POST" id="mainForm" action="http://localhost:8888/">
+            <form method="GET" id="mainForm" action="http://localhost:8888/">
                 <div id="searchFull">
                     <label for="SearchQuery"> Search it: </label>
-                    <input type="search" name="SearchQuery" id="query" onkeydown="
+                    <input type="search" name="q" id="query" onkeydown="
                     if (event.keyCode === 13) {
                         if (this.value !== this.getAttribute('value')) {
                             var pageBox = document.getElementById('pageNumber');

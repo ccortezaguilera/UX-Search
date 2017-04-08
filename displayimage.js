@@ -5,7 +5,7 @@ var express = require('express');
 var app = express();
 // Workaround for storing page info.
 var jsonResponse = null;
-const adobeMode = true;
+const adobeMode = false;
 const imagesPerPage = adobeMode ? 64 : 100;
 
 /**

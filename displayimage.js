@@ -83,20 +83,16 @@ function sendRequestToMrEdmond($, mrEdmondResponse, clientResponse) {
         let thumbnailList = obj["tags"];
         let tagInfo = obj["ids"];
         let thumbnailsHtml = $('#imageDiv').append(thumbnailList);
-        let thumbnails = thumbnailsHtml.children();
+        let thumbnails = thumbnailsHtml.children('img');
 
-        // Add the javascript to the images
-        for (let thumbnailName in thumbnails) {
-            if (thumbnails[thumbnailName].hasOwnProperty("attribs") && thumbnails[thumbnailName]["attribs"].hasOwnProperty("src")) {
-                thumbnails.get(thumbnailName).attribs['onclick'] = `
-                document.getElementById('urlQuery').value = this.getAttribute('src');
-                document.getElementById('mainForm').submit();
-                `;
-            }
-        }
-
+        // Add the Javascript to the thumbnails
         // thumbnails.removeAttr('width').removeAttr('height');
-        $('#imageDiv').children('img').addClass('resultImage');
+        thumbnails.addClass('resultImage');
+        thumbnails.attr('onclick', `
+        document.getElementById('urlQuery').value = this.getAttribute('src');
+        document.getElementById('mainForm').submit();
+        `);
+
 
         // Write page numbers
 

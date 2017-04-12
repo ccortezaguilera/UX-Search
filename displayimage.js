@@ -1,13 +1,12 @@
 var https = require("https");
 var http = require("http");
 var cheerio = require('cheerio');
-var express = require('express');
-var app = express();
+
 // Workaround for storing page info.
 var jsonResponse = null;
 const adobeMode = true;
 const imagesPerPage = adobeMode ? 64 : 100;
-
+var tagFrequencies = {};
 /**
  * Parses the search query and write the images to the HTML page.
  * 
@@ -82,6 +81,37 @@ function sendRequestToMrEdmond($, mrEdmondResponse, clientResponse) {
         let obj = getThumbnails(body);
         let thumbnailList = obj["tags"];
         let tagInfo = obj["ids"];
+        
+        var options = {
+            hostname: "www.andyedmonds.com",
+            path: "/wp-content/stock/search_id.php?ids=" + tagInfo,
+            method: "GET"
+        };
+
+        http.get(options, function(response) {
+            var info = ""
+            response.on("data", function(data){
+                info += data;
+            });
+            response.on("end", function(){
+                let tags = JSON.parse(info);
+                let keys = Object.keys(tags);
+                for (let key of keys) {
+                    var keywords = tags[key]["keywords"];
+                    for (var i = 0; i < keywords.length; i++) {
+                        if (tagFrequencies[keywords[i].name] == undefined) {
+                            tagFrequencies[keywords[i].name] = 1;
+                        } else {
+                            tagFrequencies[keywords[i].name] += 1;
+                        }
+                    }
+                }
+                //todo make the object pretty
+                let tagsHtml = $('#tags').val(JSON.stringify(tagFrequencies));
+                console.log(JSON.stringify(tagFrequencies));
+            });
+        });
+        
         let thumbnailsHtml = $('#imageDiv').append(thumbnailList);
         let thumbnails = thumbnailsHtml.children();
 
@@ -125,11 +155,6 @@ function sendRequestToMrEdmond($, mrEdmondResponse, clientResponse) {
 
         // Write out the max page number
         $('#maxPageNumber').text(`${pageCount}`);
-        app.use(function(req, res, next) {
-            res.cookie("tag", tagInfo,{maxAge: 900000, httpOnly: false});
-            res.cookie("jsonResponse", jsonResponse, {maxAge: 900000, httpOnly: false});
-            console("cookie created");
-        });
         console.log("Ending prior to use");
         clientResponse.writeHead(200, {'Content-Type': 'text/html' });
         clientResponse.write($.html());
@@ -238,9 +263,7 @@ function display_image() {
                     }
                 });
             }
-
         }
-
     }).listen(8888);
 }
 module.exports = display_image;

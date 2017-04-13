@@ -59,7 +59,7 @@
                     <input type="submit" name="backPage" value="<" onclick="
                     var pageBox = document.getElementById('pageNumber');
                     pageBox.value = Math.max(Number(pageBox.getAttribute('value')) - 1, 1);
-                    
+
                     // Set the search to be the original search query.
                     var searchBox = document.getElementById('query');
                     searchBox.value = searchBox.getAttribute('value');

@@ -213,7 +213,6 @@ var querystring = require('querystring');
 function display_image() {
     http.createServer(function (request, response) {
         if (request.method === "GET") {
-           // if (request.url == "") {
                 //response.writeHead(200, );
                 let body = "";
                 request.on('data', function (data) {
@@ -261,8 +260,7 @@ function display_image() {
 
                     parseSearchQuery($, fullQuery, response);
                 });
-            }
-            else {
+        }else {
                 fs.readFile("index.html", function (err, data) {
                     if (err) {
                         console.log(err);
@@ -276,7 +274,6 @@ function display_image() {
                     }
                 });
             }
-        }
     }).listen(8888);
 }
 module.exports = display_image;

@@ -106,9 +106,16 @@ function sendRequestToMrEdmond($, mrEdmondResponse, clientResponse) {
                         }
                     }
                 }
-                //todo make the object pretty
-                let tagsHtml = $('#tags').val(JSON.stringify(tagFrequencies));
-                console.log(JSON.stringify(tagFrequencies));
+                var resultTags = "";
+                let tagKeys = Object.keys(tagFrequencies).sort(function(a,b){ return tagFrequencies[b] - tagFrequencies[a] });
+                var length = tagKeys.length;
+                for (let i = 0; i < length; i++){
+                    resultTags += encodeURIComponent(tagKeys[i]) + "|" + encodeURIComponent(tagFrequencies[tagKeys[i]]);
+                    if (i != length - 1 ) {
+                        resultTags += ",";
+                    }
+                }
+                let tagsHtml = $('#tags').val(resultTags);
             });
         });
         
@@ -157,8 +164,12 @@ function sendRequestToMrEdmond($, mrEdmondResponse, clientResponse) {
         $('#maxPageNumber').text(`${pageCount}`);
         console.log("Ending prior to use");
         clientResponse.writeHead(200, {'Content-Type': 'text/html' });
-        clientResponse.write($.html());
-        clientResponse.end();
+        
+        // Timing out to write the result.
+        setTimeout(function(dom){
+            clientResponse.write($.html());
+            clientResponse.end();
+        }, 5000, $);
     });
 }
 

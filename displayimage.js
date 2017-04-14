@@ -3,13 +3,12 @@
 var https = require("https");
 var http = require("http");
 var cheerio = require('cheerio');
-var express = require('express');
-var app = express();
+
 // Workaround for storing page info.
 var jsonResponse = null;
 const adobeMode = true;
 const imagesPerPage = adobeMode ? 64 : 100;
-
+var tagFrequencies = {};
 /**
  * Parses the search query and write the images to the HTML page.
  * 
@@ -84,6 +83,44 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
         let obj = getThumbnails(body);
         let thumbnailList = obj["tags"];
         let tagInfo = obj["ids"];
+        
+        var options = {
+            hostname: "www.andyedmonds.com",
+            path: "/wp-content/stock/search_id.php?ids=" + tagInfo,
+            method: "GET"
+        };
+
+        http.get(options, function(response) {
+            var info = ""
+            response.on("data", function(data){
+                info += data;
+            });
+            response.on("end", function(){
+                let tags = JSON.parse(info);
+                let keys = Object.keys(tags);
+                for (let key of keys) {
+                    var keywords = tags[key]["keywords"];
+                    for (var i = 0; i < keywords.length; i++) {
+                        if (tagFrequencies[keywords[i].name] == undefined) {
+                            tagFrequencies[keywords[i].name] = 1;
+                        } else {
+                            tagFrequencies[keywords[i].name] += 1;
+                        }
+                    }
+                }
+                var resultTags = "";
+                let tagKeys = Object.keys(tagFrequencies).sort(function(a,b){ return tagFrequencies[b] - tagFrequencies[a] });
+                var length = tagKeys.length;
+                for (let i = 0; i < length; i++){
+                    resultTags += encodeURIComponent(tagKeys[i]) + "|" + encodeURIComponent(tagFrequencies[tagKeys[i]]);
+                    if (i != length - 1 ) {
+                        resultTags += ",";
+                    }
+                }
+                let tagsHtml = $('#tags').val(resultTags);
+            });
+        });
+        
         let thumbnailsHtml = $('#imageDiv').append(thumbnailList);
         let thumbnails = thumbnailsHtml.children('img');
 
@@ -110,15 +147,16 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
 
         // Write out the max page number
         $('#maxPageNumber').text(`${pageCount}`);
-        app.use(function(req, res, next) {
-            res.cookie("tag", tagInfo,{maxAge: 900000, httpOnly: false});
-            res.cookie("jsonResponse", jsonResponse, {maxAge: 900000, httpOnly: false});
-            console("cookie created");
-        });
         console.log("Ending prior to use");
         clientResponse.writeHead(200, {'Content-Type': 'text/html' });
-        clientResponse.write($.html());
-        clientResponse.end();
+        
+        // Timing out to write the result.
+        setTimeout(function(dom){
+            clientResponse.write($.html());
+            clientResponse.end();
+        }, 5000, $);
+        //clientResponse.write($.html());
+        //clientResponse.end();
     });
 }
 
@@ -177,7 +215,6 @@ var querystring = require('querystring');
 function display_image() {
     http.createServer(function (request, response) {
         if (request.method === "GET") {
-           // if (request.url == "") {
                 //response.writeHead(200, );
                 let body = "";
                 request.on('data', function (data) {
@@ -221,28 +258,24 @@ function display_image() {
                         tagQuery: (typeof encodedQuery !== "undefined") ? encodedQuery : "",
                         urlQuery: (typeof encodedUrl !== "undefined") ? encodedUrl : "",
                         pageNumber: encodedPageNumber
-                    };console.log(fullQuery);
+                    };
 
                     parseSearchQuery($, fullQuery, response);
                 });
-            // }
-            // else {
-            //     fs.readFile("index.html", function (err, data) {
-            //         if (err) {
-            //             console.log(err);
-            //             console.log("We entered here because there was extra and we couldn't open file");
-            //             response.writeHead(404, { 'Content-Type': 'text/html' });
-            //             response.end();
-            //         } else {
-            //             response.writeHead(200, { 'Content-Type': 'text/html' });
-            //             response.write(data.toString());
-            //             response.end();
-            //         }
-            //     });
-            // }
-
-        }
-
+        }else {
+                fs.readFile("index.html", function (err, data) {
+                    if (err) {
+                        console.log(err);
+                        console.log("We entered here because there was extra and we couldn't open file");
+                        response.writeHead(404, { 'Content-Type': 'text/html' });
+                        response.end();
+                    } else {
+                        response.writeHead(200, { 'Content-Type': 'text/html' });
+                        response.write(data.toString());
+                        response.end();
+                    }
+                });
+            }
     }).listen(8888);
 }
 module.exports = display_image;

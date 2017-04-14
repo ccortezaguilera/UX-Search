@@ -155,6 +155,8 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
             clientResponse.write($.html());
             clientResponse.end();
         }, 5000, $);
+        //clientResponse.write($.html());
+        //clientResponse.end();
     });
 }
 
@@ -256,7 +258,7 @@ function display_image() {
                         tagQuery: (typeof encodedQuery !== "undefined") ? encodedQuery : "",
                         urlQuery: (typeof encodedUrl !== "undefined") ? encodedUrl : "",
                         pageNumber: encodedPageNumber
-                    };console.log(fullQuery);
+                    };
 
                     parseSearchQuery($, fullQuery, response);
                 });

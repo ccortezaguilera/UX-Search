@@ -77,7 +77,6 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
     });
     
     mrEdmondResponse.on("end", function () {
-        // console.log("Entered MrEdmondResponseEnd");
         // Write images
         jsonResponse = body;
         let obj = getThumbnails(body);
@@ -89,7 +88,7 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
             path: "/wp-content/stock/search_id.php?ids=" + tagInfo,
             method: "GET"
         };
-
+        // Fetch tags from API
         http.get(options, function(response) {
             var info = ""
             response.on("data", function(data){
@@ -117,48 +116,62 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
                         resultTags += ",";
                     }
                 }
+                //calculate the deltas
+                if (fullQuery.tagInfo.length > 0) {
+                    deltaTwoTagList(fullQuery.tagInfo, resultTags);
+                }
+
+                // Add the Tags to the hidden form
+                let tagValues = $('#tags').val();
                 let tagsHtml = $('#tags').val(resultTags);
+                let thumbnailsHtml = $('#imageDiv').append(thumbnailList);
+                let thumbnails = thumbnailsHtml.children('img');
+
+
+                // Add the Javascript to the thumbnails
+                // thumbnails.removeAttr('width').removeAttr('height');
+                thumbnails.addClass('resultImage');
+                thumbnails.attr('onclick', `
+                document.getElementById('urlQuery').value = this.getAttribute('src');
+                document.getElementById('mainForm').submit();
+                `);
+
+                // Write page numbers
+
+                // Check for valid page number inputs.
+                let resultsCount = getNumberOfResults(body);
+                let pageCount = Math.max(Math.ceil(resultsCount / imagesPerPage), 1);
+
+                // Write the page number into the input box.
+                var pageNumberBox = $('#pageNumber');
+                pageNumberBox.val(fullQuery.pageNumber);
+                pageNumberBox.attr('size', Math.floor(Math.log10(pageCount)) + 1);
+                pageNumberBox.attr('maxlength', Math.floor(Math.log10(pageCount)) + 2);
+
+                // Write out the max page number
+                $('#maxPageNumber').text(`${pageCount}`);
+                console.log("Ending prior to use");
+                clientResponse.writeHead(200, {'Content-Type': 'text/html' });
+                clientResponse.write($.html());
+                clientResponse.end();
             });
         });
         
-        let thumbnailsHtml = $('#imageDiv').append(thumbnailList);
-        let thumbnails = thumbnailsHtml.children('img');
-
-        // Add the Javascript to the thumbnails
-        // thumbnails.removeAttr('width').removeAttr('height');
-        thumbnails.addClass('resultImage');
-        thumbnails.attr('onclick', `
-        document.getElementById('urlQuery').value = this.getAttribute('src');
-        document.getElementById('mainForm').submit();
-        `);
-
-
-        // Write page numbers
-
-        // Check for valid page number inputs.
-        let resultsCount = getNumberOfResults(body);
-        let pageCount = Math.max(Math.ceil(resultsCount / imagesPerPage), 1);
-
-        // Write the page number into the input box.
-        var pageNumberBox = $('#pageNumber');
-        pageNumberBox.val(fullQuery.pageNumber);
-        pageNumberBox.attr('size', Math.floor(Math.log10(pageCount)) + 1);
-        pageNumberBox.attr('maxlength', Math.floor(Math.log10(pageCount)) + 2);
-
-        // Write out the max page number
-        $('#maxPageNumber').text(`${pageCount}`);
-        console.log("Ending prior to use");
-        clientResponse.writeHead(200, {'Content-Type': 'text/html' });
-        
-        // Timing out to write the result.
-        setTimeout(function(dom){
-            clientResponse.write($.html());
-            clientResponse.end();
-        }, 5000, $);
-        //clientResponse.write($.html());
-        //clientResponse.end();
     });
 }
+
+/** 
+ * @returns  
+ */
+function deltaTwoTagList(tags1, tags2) {
+    //todo calculate tags1 = priorTags and tags2 newtags.
+    console.log(tags1 + "\n");
+    console.log(tags2);
+    var priorTags = tags1.split(",");
+    var newTags = tags2.split(",");
+    
+}
+
 
 /**
  * Returns an array of thumbnails.
@@ -230,7 +243,13 @@ function display_image() {
                     let encodedQuery = encodeURIComponent(formData['q']);
                     let encodedPageNumber = encodeURIComponent(formData['PageNumber']);
                     let encodedUrl = encodeURIComponent(formData['URLQuery']);
-                    
+                    let priorTags = "";
+                    if (rawQueries != null) {
+                        let tagsIndex = rawQueries.indexOf("tags=");
+                        if (tagsIndex > 0) {
+                            priorTags = decodeURIComponent(rawQueries.substring(tagsIndex+"tags=".length));
+                        }
+                    }
                     if (encodedPageNumber === undefined) {
                         encodedPageNumber = Math.max(encodedPageNumber, 1);
                     } else if (!Number.isInteger(Number(encodedPageNumber))) {
@@ -257,7 +276,8 @@ function display_image() {
                     var fullQuery = {
                         tagQuery: (typeof encodedQuery !== "undefined") ? encodedQuery : "",
                         urlQuery: (typeof encodedUrl !== "undefined") ? encodedUrl : "",
-                        pageNumber: encodedPageNumber
+                        pageNumber: encodedPageNumber,
+                        tagInfo: (typeof priorTags !== "undefined") ? priorTags : ""
                     };
 
                     parseSearchQuery($, fullQuery, response);

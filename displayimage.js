@@ -7,7 +7,7 @@ var cheerio = require('cheerio');
 // Workaround for storing page info.
 var jsonResponse = null;
 const adobeMode = true;
-const imagesPerPage = adobeMode ? 64 : 100;
+const imagesPerPage = adobeMode ? 500 : 100;
 var tagFrequencies = {};
 /**
  * Parses the search query and write the images to the HTML page.
@@ -116,23 +116,28 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
                         resultTags += ",";
                     }
                 }
-                var delta;
+                var results;
                 //calculate the deltas
                 if (fullQuery.tagInfo.length > 0) {
-                    delta = deltaTwoTagList(fullQuery.tagInfo, resultTags);
+                    let delta = deltaToTagList(fullQuery.tagInfo, resultTags);
                     //key: tag value: difference
-                    console.log(delta);
-                    let results = Object.keys(delta).sort(function(a,b) { return delta[b] - delta[a]});
+                    results = Object.keys(delta).sort(function(a,b) { return delta[b] - delta[a]});
                     console.log(results);
                 }
-
+                var tagValues;
+                var tagsHtml;
+                var thumbnailsHtml;
+                var thumbnails;
                 // Add the Tags to the hidden form
-                let tagValues = $('#tags').val();
-                let tagsHtml = $('#tags').val(resultTags);
-                let thumbnailsHtml = $('#imageDiv').append(thumbnailList);
-                let thumbnails = thumbnailsHtml.children('img');
+                if (results != undefined || results!= null) {
+                    tagValues = $('#tags').val(JSON.stringify(results));
+                } else {
+                    tagsHtml = $('#tags').val(resultTags);
+                }
 
-
+                
+                thumbnailsHtml = $('#imageDiv').append(thumbnailList);
+                thumbnails = thumbnailsHtml.children('img');
                 // Add the Javascript to the thumbnails
                 // thumbnails.removeAttr('width').removeAttr('height');
                 thumbnails.addClass('resultImage');
@@ -168,7 +173,7 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
 /** 
  * @returns  
  */
-function deltaTwoTagList(tags1, tags2) {
+function deltaToTagList(tags1, tags2) {
     //todo calculate tags1 = priorTags and tags2 newtags.
     var priorTags = tags1.split(",");
     var newTags = tags2.split(",");
@@ -182,8 +187,6 @@ function deltaTwoTagList(tags1, tags2) {
     for (var j=0; j<priorTags.length; j++) { 
         newTagsObj[newTags[j].split("|")[0]] = newTags[j].split("|")[1];
     }
-    console.log(priorTagsObj);
-    console.log(newTagsObj);
     return calcDelta(priorTagsObj, newTagsObj);
 }
 

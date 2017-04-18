@@ -108,7 +108,7 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
                     }
                 }
                 var resultTags = "";
-                let tagKeys = Object.keys(tagFrequencies).sort(function(a,b){ return tagFrequencies[b] - tagFrequencies[a] });
+                let tagKeys = Object.keys(tagFrequencies).sort(function(a,b){ return tagFrequencies[b] - tagFrequencies[a]});
                 var length = tagKeys.length;
                 for (let i = 0; i < length; i++){
                     resultTags += encodeURIComponent(tagKeys[i]) + "|" + encodeURIComponent(tagFrequencies[tagKeys[i]]);
@@ -116,9 +116,14 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
                         resultTags += ",";
                     }
                 }
+                var delta;
                 //calculate the deltas
                 if (fullQuery.tagInfo.length > 0) {
-                    deltaTwoTagList(fullQuery.tagInfo, resultTags);
+                    delta = deltaTwoTagList(fullQuery.tagInfo, resultTags);
+                    //key: tag value: difference
+                    console.log(delta);
+                    let results = Object.keys(delta).sort(function(a,b) { return delta[b] - delta[a]});
+                    console.log(results);
                 }
 
                 // Add the Tags to the hidden form
@@ -165,13 +170,36 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
  */
 function deltaTwoTagList(tags1, tags2) {
     //todo calculate tags1 = priorTags and tags2 newtags.
-    console.log(tags1 + "\n");
-    console.log(tags2);
     var priorTags = tags1.split(",");
     var newTags = tags2.split(",");
-    
+
+
+    var priorTagsObj = {};
+    var newTagsObj = {};
+    for (var i=0; i<priorTags; i++) { 
+        priorTagsObj[priorTags[i].split("|")[0]] = priorTags[i].split("|")[1];
+    }
+    for (var j=0; j<priorTags.length; j++) { 
+        newTagsObj[newTags[j].split("|")[0]] = newTags[j].split("|")[1];
+    }
+    console.log(priorTagsObj);
+    console.log(newTagsObj);
+    return calcDelta(priorTagsObj, newTagsObj);
 }
 
+function calcDelta(oldResults, newResults) {
+    var delta = {};
+    for (var key in newResults) {
+        var obj = oldResults[key];
+        var obj2 = newResults[key];
+        if (!oldResults.hasOwnProperty(key) && newResults.hasOwnProperty(key)) {
+            delta[key] = obj2;
+        } else if (oldResults.hasOwnProperty(key) && newResults.hasOwnProperty(key)) {
+            delta[key] = obj2 - obj;
+        }
+    }
+    return delta;
+}
 
 /**
  * Returns an array of thumbnails.
@@ -247,7 +275,9 @@ function display_image() {
                     if (rawQueries != null) {
                         let tagsIndex = rawQueries.indexOf("tags=");
                         if (tagsIndex > 0) {
-                            priorTags = decodeURIComponent(rawQueries.substring(tagsIndex+"tags=".length));
+                            let priorTagsString = rawQueries.substring(tagsIndex+"tags=".length);
+                            let ampersandIndex = priorTagsString.indexOf("&");
+                            priorTags = decodeURIComponent(priorTagsString.substring(0,ampersandIndex));
                         }
                     }
                     if (encodedPageNumber === undefined) {

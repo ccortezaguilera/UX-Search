@@ -97,8 +97,10 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
             response.on("end", function(){
                 let tags = JSON.parse(info);
                 let keys = Object.keys(tags);
+                //todo make a forEach function call on the keys.
                 for (let key of keys) {
                     var keywords = tags[key]["keywords"];
+                    //do another forEach function call for the keywords.
                     for (var i = 0; i < keywords.length; i++) {
                         if (tagFrequencies[keywords[i].name] == undefined) {
                             tagFrequencies[keywords[i].name] = 1;
@@ -122,7 +124,7 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
                     let delta = deltaToTagList(fullQuery.tagInfo, resultTags);
                     //key: tag value: difference
                     results = Object.keys(delta).sort(function(a,b) { return delta[b] - delta[a]});
-                    console.log(results);
+                    //console.log(results);
                 }
                 var tagValues;
                 var tagsHtml;
@@ -130,7 +132,12 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
                 var thumbnails;
                 // Add the Tags to the hidden form
                 if (results != undefined || results!= null) {
+                    // add the resulting deltas
                     tagValues = $('#tags').val(JSON.stringify(results));
+                    //place tags on the top of the page.
+                    var tagATag = results.slice(0,10).map(function(index){return `<div class="_resulttag"><a href="#" onclick="document.getElementById('urlQuery').value+=`
+                     + index +`";document.getElementById('mainForm').submit();><span>`+ index +`</span></a></div>`});
+                    $('#displaytags').append(tagATag);
                 } else {
                     tagsHtml = $('#tags').val(resultTags);
                 }

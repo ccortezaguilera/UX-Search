@@ -135,8 +135,15 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
                     // add the resulting deltas
                     tagValues = $('#tags').val(JSON.stringify(results));
                     //place tags on the top of the page.
-                    var tagATag = results.slice(0,10).map(function(index){return `<div class="_resulttag"><a href="#" onclick="document.getElementById('urlQuery').value+=`
-                     + index +`";document.getElementById('mainForm').submit();><span>`+ index +`</span></a></div>`});
+                    var tagATag = results.slice(0,10).map(function(index){
+                        return `
+                        <span class="_resulttag">
+                            <a href="#" onclick="
+                                document.getElementById('query').value+=' `+ index +`';
+                                document.getElementById('mainForm').submit();">
+                                    <span>${index}</span>
+                            </a>
+                        </span>`});
                     $('#displaytags').append(tagATag);
                 } else {
                     tagsHtml = $('#tags').val(resultTags);
@@ -219,6 +226,7 @@ function calcDelta(oldResults, newResults) {
  */
 function getThumbnails(response) {
     let responseObj = JSON.parse(response);
+
     if (adobeMode) {
         responseObj = responseObj['files'];
     }

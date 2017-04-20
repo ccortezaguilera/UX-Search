@@ -15,7 +15,7 @@ function displaySearch() {
                     response.end();
                 } else {
                     var $ = cheerio.load(data.toString());
-                    $('#pageNumberArea').remove();
+                    $('#pageNumberArea').attr('style', 'visibility: hidden;');
 
                     response.writeHead(200, {'Content-Type': 'text/html'});
                     response.write($.html());

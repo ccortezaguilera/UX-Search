@@ -212,7 +212,7 @@ function calcDelta(oldResults, newResults) {
         if (!oldResults.hasOwnProperty(key) && newResults.hasOwnProperty(key)) {
             delta[key] = obj2;
         } else if (oldResults.hasOwnProperty(key) && newResults.hasOwnProperty(key)) {
-            delta[key] = obj2 - obj;
+            delta[key] = obj2 / obj;
         }
     }
     return delta;

@@ -21,20 +21,47 @@
                 margin: 10px;
             }
             
+            #imageDiv {
+                column-count: 10;
+            }
             .resultImage {
-                width: 10%;
+                display: inline-block;
+                /*margin: 0 0 1em;
+                width: 100%;*/
+                width: 100%;
                 margin-left: 10px;
                 margin-right: 10px;
                 margin-top: 10px;
                 margin-bottom: 10px;
+                box-sizing: border-box;
+                -moz-box-sizing: border-box;
+                -webkit-box-sizing: border-box;
+                box-shadow: 2px 2px 4px 0 #ccc;
             }
 
+            .tagname {
+                color: white;
+                text-decoration-color: white;
+                text-decoration-line: inherit;
+            }
             ._resulttag {
+                display: inline-block;
+                margin: 0 0 1em;
+                width: 100%;
+                background-color: green;
                 margin: 10px;
                 margin-left: 10px;
                 margin-right: 10px;
                 margin-bottom: 10px;
                 margin-top: 10px;
+                box-sizing: border-box;
+                -moz-box-sizing: border-box;
+                -webkit-box-sizing: border-box;
+                box-shadow: 2px 2px 4px 0 #4caf50;
+            }
+            #displaytags {
+                column-count: 5;
+                /*column-gap: 1em;*/
             }
         </style>
     </head> 

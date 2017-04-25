@@ -152,8 +152,7 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
                 
                 thumbnailsHtml = $('#imageDiv').append(thumbnailList);
                 thumbnails = thumbnailsHtml.children('img');
-                // Add the Javascript to the thumbnails
-                // thumbnails.removeAttr('width').removeAttr('height');
+                
                 thumbnails.addClass('resultImage');
                 thumbnails.attr('onclick', `
                 document.getElementById('urlQuery').value = this.getAttribute('src');
@@ -274,7 +273,6 @@ var querystring = require('querystring');
 function display_image() {
     http.createServer(function (request, response) {
         if (request.method === "GET") {
-                //response.writeHead(200, );
                 let body = "";
                 request.on('data', function (data) {
                     body += data.toString();
@@ -289,6 +287,7 @@ function display_image() {
                     let encodedQuery = encodeURIComponent(formData['q']);
                     let encodedPageNumber = encodeURIComponent(formData['PageNumber']);
                     let encodedUrl = encodeURIComponent(formData['URLQuery']);
+
                     let priorTags = "";
                     if (rawQueries != null) {
                         let tagsIndex = rawQueries.indexOf("tags=");
@@ -321,6 +320,10 @@ function display_image() {
                         $('#query').val(formData['q']);
                     }
 
+                    if (encodedUrl) {
+                        console.log("EncodedURL: ");
+                        console.log(encodedUrl);
+                    }
                     var fullQuery = {
                         tagQuery: (typeof encodedQuery !== "undefined") ? encodedQuery : "",
                         urlQuery: (typeof encodedUrl !== "undefined") ? encodedUrl : "",

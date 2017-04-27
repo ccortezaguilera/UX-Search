@@ -124,7 +124,6 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
                     let delta = deltaToTagList(fullQuery.tagInfo, resultTags);
                     //key: tag value: difference
                     results = Object.keys(delta).sort(function(a,b) { return delta[b] - delta[a]});
-                    //console.log(results);
                 }
                 var tagValues;
                 var tagsHtml;
@@ -272,6 +271,7 @@ var url = require('url');
 var querystring = require('querystring');
 function display_image() {
     http.createServer(function (request, response) {
+        console.log(request.method);
         if (request.method === "GET") {
                 let body = "";
                 request.on('data', function (data) {
@@ -290,6 +290,9 @@ function display_image() {
 
                     let priorTags = "";
                     if (rawQueries != null) {
+                        console.log("RawQueries");
+                        console.log(rawQueries);
+                        console.log("-------------------");
                         let tagsIndex = rawQueries.indexOf("tags=");
                         if (tagsIndex > 0) {
                             let priorTagsString = rawQueries.substring(tagsIndex+"tags=".length);
@@ -309,6 +312,7 @@ function display_image() {
 
                     // If raw queries is bad, then write as if it were the 8080 port.
                     if (!rawQueries) {
+                        console.log("no rawqueries");
                         $('#pageNumberArea').remove();
                         response.write($.html());
                         response.end();
@@ -323,7 +327,9 @@ function display_image() {
                     if (encodedUrl) {
                         console.log("EncodedURL: ");
                         console.log(encodedUrl);
+                        //$('#query').val(formData['q']);
                     }
+
                     var fullQuery = {
                         tagQuery: (typeof encodedQuery !== "undefined") ? encodedQuery : "",
                         urlQuery: (typeof encodedUrl !== "undefined") ? encodedUrl : "",
@@ -334,6 +340,7 @@ function display_image() {
                     parseSearchQuery($, fullQuery, response);
                 });
         }else {
+                console.log("ah error!")
                 fs.readFile("index.html", function (err, data) {
                     if (err) {
                         console.log(err);
@@ -341,6 +348,7 @@ function display_image() {
                         response.writeHead(404, { 'Content-Type': 'text/html' });
                         response.end();
                     } else {
+                        console.log("No error!")
                         response.writeHead(200, { 'Content-Type': 'text/html' });
                         response.write(data.toString());
                         response.end();

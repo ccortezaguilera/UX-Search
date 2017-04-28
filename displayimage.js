@@ -8,8 +8,9 @@ var store = require('store');
 // Workaround for storing page info.
 var jsonResponse = null;
 const adobeMode = true;
-const imagesPerPage = adobeMode ? 500 : 100;
+const imagesPerPage = adobeMode ? 64 : 100;
 var tagFrequencies = {};
+
 /**
  * Parses the search query and write the images to the HTML page.
  * 
@@ -98,34 +99,35 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
             response.on("end", function(){
                 let tags = JSON.parse(info);
                 let keys = Object.keys(tags);
-                //todo make a forEach function call on the keys.
-                for (let key of keys) {
-                    var keywords = tags[key]["keywords"];
-                    //do another forEach function call for the keywords.
-                    for (var i = 0; i < keywords.length; i++) {
-                        if (tagFrequencies[keywords[i].name] == undefined) {
-                            tagFrequencies[keywords[i].name] = 1;
+
+                keys.forEach(function(element, index, array){             
+                    tags[element]["keywords"].forEach(function(element, index, array) {
+                        if (tagFrequencies[element.name] == undefined) {
+                            tagFrequencies[element.name] = 1;
                         } else {
-                            tagFrequencies[keywords[i].name] += 1;
+                            tagFrequencies[element.name] += 1;
                         }
-                    }
-                }
+                    });
+                });
+
                 /* Check local storage for tags*/
                 var results;
                 let theTags = store.get('tags');
+                let displayTags = {};
                 if (theTags === undefined || theTags === null) {
-                    let tags = {};
                     //sort the tags in decreasing order
                     results = sortKeysDecreasing(tagFrequencies);
-                    results.forEach(function(element, index, array){tags[element] = tagFrequencies[element]});
-                    store.set('tags', tags);
-                    //add the inital tags to the top
+                    results.forEach(function(element, index, array){ displayTags[element] = tagFrequencies[element] });
+                    store.set('tags', displayTags);
                 } else {
+                    //calculate delta
                     let delta = calcDelta(theTags, tagFrequencies);
-                    store.set('delta', delta);
                     results = sortKeysDecreasing(delta);
+                    results.forEach(function(element, index, array){ displayTags[element] = delta[element] });
+                    store.set('tags', displayTags);
                 }
-                                    //place tags on the top of the page.
+
+                //place tags on the top of the page.
                 var tagATag = createTagHTML(results, fullQuery);
                 $('#displaytags').append(tagATag);
                 var thumbnailsHtml = $('#imageDiv').append(thumbnailList);
@@ -164,22 +166,25 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
     });
 }
 
+/**
+ * @param [object Array] results the array of keys from decreasing order
+ * @param {object} fullQuery the information with the query by client
+ */
 function createTagHTML(results, fullQuery) {
     return results.slice(0,10).map(function(element,index, array){
-                        var words = decodeURIComponent(fullQuery['tagQuery']);
-                        let newTag = ``;
-                        if (!isAQuery(words, element)) {
-                            newTag += `<span class="_resulttag">
-                            <a class="_onClk" href="#" onclick="
-                                document.getElementById('query').value+=' `+ element +`';
-                                document.getElementById('mainForm').submit();">
-                                    <span class="sp">${element}</span>
-                            </a>
+        var words = decodeURIComponent(fullQuery['tagQuery']);
+        let newTag = ``;
+        if (!isAQuery(words, element)) {
+            newTag += `<span class="_resulttag">
+                        <a class="_onClk" href="#" onclick="
+                            document.getElementById('query').value+=' `+ element +`';
+                            document.getElementById('mainForm').submit();">
+                            <span class="sp">${element}</span>
+                        </a>
                         </span>`;
-                        }
-                        return newTag;
-
-                    });
+        }
+        return newTag;
+    });
 }
 
 /**
@@ -276,6 +281,10 @@ function getNumberOfResults(response) {
     return 0;
 }
 
+/** 
+ * main logic of app
+ * 
+ */
 var fs = require('fs');
 var url = require('url');
 var querystring = require('querystring');

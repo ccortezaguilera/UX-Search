@@ -139,7 +139,6 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
                 document.getElementById('mainForm').submit();
                 `);
 
-
                 // Check for valid page number inputs.
                 let resultsCount = getNumberOfResults(body);
                 let pageCount = Math.max(Math.ceil(resultsCount / imagesPerPage), 1);
@@ -162,7 +161,6 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
                 console.log(`Got Error ${e.message}`);
             });
         });
-        
     });
 }
 
@@ -261,7 +259,6 @@ function getThumbnails(response) {
         ids:ids,
         tags:imageList
     };
-
     return obj;
 }
 /**
@@ -277,7 +274,6 @@ function getNumberOfResults(response) {
     if (typeof resultCount !== "undefined") {
         return Number(resultCount);
     }
-
     return 0;
 }
 

@@ -111,30 +111,23 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
                     }
                 }
                 /* Check local storage for tags*/
+                var results;
                 let theTags = store.get('tags');
                 if (theTags === undefined || theTags === null) {
                     let tags = {};
                     //sort the tags in decreasing order
-                    sortKeysDecreasing(tagFrequencies).forEach(function(element, index, array){tags[element] = tagFrequencies[element]});
+                    results = sortKeysDecreasing(tagFrequencies);
+                    results.forEach(function(element, index, array){tags[element] = tagFrequencies[element]});
                     store.set('tags', tags);
+                    //add the inital tags to the top
                 } else {
                     let delta = calcDelta(theTags, tagFrequencies);
                     store.set('delta', delta);
-                    var results = sortKeysDecreasing(delta);
-                    $('#tags').val(JSON.stringify(results));
-                    //place tags on the top of the page.
-                    var tagATag = results.slice(0,10).map(function(index){
-                        return `
-                        <span class="_resulttag">
-                            <a class="_onClk" href="#" onclick="
-                                document.getElementById('query').value+=' `+ index +`';
-                                document.getElementById('mainForm').submit();">
-                                    <span class="sp">${index}</span>
-                            </a>
-                        </span>`});
-                    $('#displaytags').append(tagATag);
+                    results = sortKeysDecreasing(delta);
                 }
-                
+                                    //place tags on the top of the page.
+                var tagATag = createTagHTML(results, fullQuery);
+                $('#displaytags').append(tagATag);
                 var thumbnailsHtml = $('#imageDiv').append(thumbnailList);
                 var thumbnails = thumbnailsHtml.children('img');
                 
@@ -171,6 +164,46 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
     });
 }
 
+function createTagHTML(results, fullQuery) {
+    return results.slice(0,10).map(function(element,index, array){
+                        var words = decodeURIComponent(fullQuery['tagQuery']);
+                        let newTag = ``;
+                        if (!isAQuery(words, element)) {
+                            newTag += `<span class="_resulttag">
+                            <a class="_onClk" href="#" onclick="
+                                document.getElementById('query').value+=' `+ element +`';
+                                document.getElementById('mainForm').submit();">
+                                    <span class="sp">${element}</span>
+                            </a>
+                        </span>`;
+                        }
+                        return newTag;
+
+                    });
+}
+
+/**
+ * checks to see if the value matches any of the queries
+ * @param {object} words 
+ * @param {object} value 
+ */
+function isAQuery(words, value) {
+    let splitWords = words.split(" ");
+    if (words === value) {
+        return true;
+    }
+    for (var i = 0; i < splitWords.length; i++) {
+        if (value === splitWords[i]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * @returns [object Array] the sorted keys from largest to smallest
+ * 
+ */
 function sortKeysDecreasing(obj) {
     return Object.keys(obj).sort(function(a,b){ return obj[b] - obj[a] });
 }
@@ -242,7 +275,7 @@ function getNumberOfResults(response) {
 
     return 0;
 }
-// Backup code
+
 var fs = require('fs');
 var url = require('url');
 var querystring = require('querystring');
@@ -264,15 +297,6 @@ function display_image() {
                     let encodedPageNumber = encodeURIComponent(formData['PageNumber']);
                     let encodedUrl = encodeURIComponent(formData['URLQuery']);
 
-                    let priorTags = "";
-                    if (rawQueries != null) {
-                        let tagsIndex = rawQueries.indexOf("tags=");
-                        if (tagsIndex > 0) {
-                            let priorTagsString = rawQueries.substring(tagsIndex+"tags=".length);
-                            let ampersandIndex = priorTagsString.indexOf("&");
-                            priorTags = decodeURIComponent(priorTagsString.substring(0,ampersandIndex));
-                        }
-                    }
                     if (encodedPageNumber === undefined) {
                         encodedPageNumber = Math.max(encodedPageNumber, 1);
                     } else if (!Number.isInteger(Number(encodedPageNumber))) {
@@ -285,7 +309,6 @@ function display_image() {
 
                     // If raw queries is bad, then write as if it were the 8080 port.
                     if (!rawQueries) {
-                        console.log("no rawqueries");
                         $('#pageNumberArea').remove();
                         response.write($.html());
                         response.end();
@@ -297,23 +320,15 @@ function display_image() {
                         $('#query').val(formData['q']);
                     }
 
-                    if (encodedUrl) {
-                        console.log("EncodedURL: ");
-                        console.log(encodedUrl);
-                        //$('#query').val(formData['q']);
-                    }
-
                     var fullQuery = {
                         tagQuery: (typeof encodedQuery !== "undefined") ? encodedQuery : "",
                         urlQuery: (typeof encodedUrl !== "undefined") ? encodedUrl : "",
-                        pageNumber: encodedPageNumber,
-                        tagInfo: (typeof priorTags !== "undefined") ? priorTags : ""
+                        pageNumber: encodedPageNumber
                     };
 
                     parseSearchQuery($, fullQuery, response);
                 });
         }else {
-                console.log("ah error!")
                 fs.readFile("index.html", function (err, data) {
                     if (err) {
                         console.log(err);
@@ -321,7 +336,6 @@ function display_image() {
                         response.writeHead(404, { 'Content-Type': 'text/html' });
                         response.end();
                     } else {
-                        console.log("No error!")
                         response.writeHead(200, { 'Content-Type': 'text/html' });
                         response.write(data.toString());
                         response.end();

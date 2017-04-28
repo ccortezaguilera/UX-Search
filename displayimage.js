@@ -1,8 +1,9 @@
 "use strict";
 
-var https = require("https");
-var http = require("http");
+var https = require('https');
+var http = require('http');
 var cheerio = require('cheerio');
+var store = require('store');
 
 // Workaround for storing page info.
 var jsonResponse = null;
@@ -109,48 +110,33 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
                         }
                     }
                 }
-                var resultTags = "";
-                let tagKeys = Object.keys(tagFrequencies).sort(function(a,b){ return tagFrequencies[b] - tagFrequencies[a]});
-                var length = tagKeys.length;
-                for (let i = 0; i < length; i++){
-                    resultTags += encodeURIComponent(tagKeys[i]) + "|" + encodeURIComponent(tagFrequencies[tagKeys[i]]);
-                    if (i != length - 1 ) {
-                        resultTags += ",";
-                    }
-                }
-                var results;
-                //calculate the deltas
-                if (fullQuery.tagInfo.length > 0) {
-                    let delta = deltaToTagList(fullQuery.tagInfo, resultTags);
-                    //key: tag value: difference
-                    results = Object.keys(delta).sort(function(a,b) { return delta[b] - delta[a]});
-                }
-                var tagValues;
-                var tagsHtml;
-                var thumbnailsHtml;
-                var thumbnails;
-                // Add the Tags to the hidden form
-                if (results != undefined || results!= null) {
-                    // add the resulting deltas
-                    tagValues = $('#tags').val(JSON.stringify(results));
+                /* Check local storage for tags*/
+                let theTags = store.get('tags');
+                if (theTags === undefined || theTags === null) {
+                    let tags = {};
+                    //sort the tags in decreasing order
+                    sortKeysDecreasing(tagFrequencies).forEach(function(element, index, array){tags[element] = tagFrequencies[element]});
+                    store.set('tags', tags);
+                } else {
+                    let delta = calcDelta(theTags, tagFrequencies);
+                    store.set('delta', delta);
+                    var results = sortKeysDecreasing(delta);
+                    $('#tags').val(JSON.stringify(results));
                     //place tags on the top of the page.
                     var tagATag = results.slice(0,10).map(function(index){
                         return `
                         <span class="_resulttag">
-                            <a href="#" onclick="
+                            <a class="_onClk" href="#" onclick="
                                 document.getElementById('query').value+=' `+ index +`';
                                 document.getElementById('mainForm').submit();">
-                                    <span>${index}</span>
+                                    <span class="sp">${index}</span>
                             </a>
                         </span>`});
                     $('#displaytags').append(tagATag);
-                } else {
-                    tagsHtml = $('#tags').val(resultTags);
                 }
-
                 
-                thumbnailsHtml = $('#imageDiv').append(thumbnailList);
-                thumbnails = thumbnailsHtml.children('img');
+                var thumbnailsHtml = $('#imageDiv').append(thumbnailList);
+                var thumbnails = thumbnailsHtml.children('img');
                 
                 thumbnails.addClass('resultImage');
                 thumbnails.attr('onclick', `
@@ -158,7 +144,6 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
                 document.getElementById('mainForm').submit();
                 `);
 
-                // Write page numbers
 
                 // Check for valid page number inputs.
                 let resultsCount = getNumberOfResults(body);
@@ -177,30 +162,22 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
                 clientResponse.write($.html());
                 clientResponse.end();
             });
+
+            response.on("error",(e)=> {
+                console.log(`Got Error ${e.message}`);
+            });
         });
         
     });
 }
 
-/** 
- * @returns  
- */
-function deltaToTagList(tags1, tags2) {
-    //todo calculate tags1 = priorTags and tags2 newtags.
-    var priorTags = tags1.split(",");
-    var newTags = tags2.split(",");
-
-
-    var priorTagsObj = {};
-    var newTagsObj = {};
-    for (var i=0; i<priorTags; i++) { 
-        priorTagsObj[priorTags[i].split("|")[0]] = priorTags[i].split("|")[1];
-    }
-    for (var j=0; j<priorTags.length; j++) { 
-        newTagsObj[newTags[j].split("|")[0]] = newTags[j].split("|")[1];
-    }
-    return calcDelta(priorTagsObj, newTagsObj);
+function sortKeysDecreasing(obj) {
+    return Object.keys(obj).sort(function(a,b){ return obj[b] - obj[a] });
 }
+
+/**
+ * @returns {Object} the delta object containing the results.   
+ */
 
 function calcDelta(oldResults, newResults) {
     var delta = {};
@@ -271,8 +248,7 @@ var url = require('url');
 var querystring = require('querystring');
 function display_image() {
     http.createServer(function (request, response) {
-        console.log(request.method);
-        if (request.method === "GET") {
+        if (request.method === "GET" && request.headers['accept'].includes('text/html')) {
                 let body = "";
                 request.on('data', function (data) {
                     body += data.toString();
@@ -290,9 +266,6 @@ function display_image() {
 
                     let priorTags = "";
                     if (rawQueries != null) {
-                        console.log("RawQueries");
-                        console.log(rawQueries);
-                        console.log("-------------------");
                         let tagsIndex = rawQueries.indexOf("tags=");
                         if (tagsIndex > 0) {
                             let priorTagsString = rawQueries.substring(tagsIndex+"tags=".length);

@@ -2,69 +2,148 @@
 <html>
     <head>
         <meta charset="utf8">
-    </head>
+        <!--<link rel="stylesheet" href="style.css">-->
+        <style>
+            #pageNumberArea > * {
+                font-size: 24pt;
+            }
+            #onClk:link {
+                color:white;
+            }
+            #sp{
+                color:white;
+            }
+
+            .query {
+                font-size: 1.5rem;
+                height: 80px;
+                padding: 20px 28px;
+                padding-top: 20px;
+                padding-right: 28px;
+                padding-bottom: 20px;
+                padding-left: 28px;
+                width: 100%;
+                font-weight: 300;
+                box-sizing: border-box;
+            }
+
+            #searchFull > * {
+                font-size: 24pt;
+            }
+
+            #searchFull > input[type="submit"] {
+                width: 120px;
+                font: 24pt;
+                
+            }
+
+            body {
+                margin: 10px;
+            }
+            
+            #imageDiv {
+                column-count: 6;
+            }
+            .resultImage {
+                display: inline-block;
+                /*margin: 0 0 1em;
+                width: 100%;*/
+                width: 100%;
+                margin-left: 10px;
+                margin-right: 10px;
+                margin-top: 10px;
+                margin-bottom: 10px;
+                box-sizing: border-box;
+                -moz-box-sizing: border-box;
+                -webkit-box-sizing: border-box;
+                box-shadow: 2px 2px 4px 0 #ccc;
+            }
+
+            .tagname {
+                color: white;
+                text-decoration-color: white;
+                text-decoration-line: inherit;
+            }
+            ._resulttag {
+                display: inline-block;
+                margin: 0 0 1em;
+                width: 100%;
+                background-color: #4caf50;
+                margin: 10px;
+                margin-left: 10px;
+                margin-right: 10px;
+                margin-bottom: 10px;
+                margin-top: 10px;
+                box-sizing: border-box;
+                -moz-box-sizing: border-box;
+                -webkit-box-sizing: border-box;
+                box-shadow: 2px 2px 4px 0 #4caf50;
+            }
+            #displaytags {
+                column-count: 5;
+                /*column-gap: 1em;*/
+            }
+        </style>
+    </head> 
     <body>
-        <div align="center">
-            <form method="POST" action="http://localhost:8888/">
-                <label for="SearchQuery"> Search it: </label>
-                <input type="search" name="SearchQuery" id="query" onkeydown="
-                if (event.keyCode === 13) {
-                    if (this.value !== this.getAttribute('value')) {
+        <div align="center" id="displaytags"></div>
+        <div align="center" id= "searchbar">
+            <form method="GET" id="mainForm" action="http://localhost:8888/">
+                <div id="searchFull">
+                    <input type="search" name="q" id="query" placeholder="&nbsp;Search high-quality images, graphics and videos" onkeydown="
+                    if (event.keyCode === 13) {
+                        if (this.value !== this.getAttribute('value')) {
+                            var pageBox = document.getElementById('pageNumber');
+                            pageBox.value = 1;
+                        }
+                    }
+                    "/>
+                    <input type="submit" name="Submit" class="search-text-input" onclick="
+                    var searchBox = document.getElementById('query');
+                    if (searchBox.value !== searchBox.getAttribute('value')) {
                         var pageBox = document.getElementById('pageNumber');
                         pageBox.value = 1;
                     }
-                }
-                ">
-                <input type="submit" name="Submit" onclick="
-                var searchBox = document.getElementById('query');
-                if (searchBox.value !== searchBox.getAttribute('value')) {
-                    var pageBox = document.getElementById('pageNumber');
-                    pageBox.value = 1;
-                }
-                ">
-                <div align="left" id="imageDiv">
+                    var tags = document.getElementById('tags');
+                    /*if (tags.value.length() > 0) {
+                        tags.value = encodeURIComponent(tags.value);
+                        console.log(tags.value);
+                    }*/
+                    "/>
+                    <input type="hidden" name="URLQuery" id="urlQuery">
                 </div>
-                <div id="pageNumberArea">
+            </form>
+            <div align="left" id="imageDiv"></div>
+            <div id="pageNumberArea">
                     <input type="submit" name="backPage" value="<" onclick="
                     var pageBox = document.getElementById('pageNumber');
                     pageBox.value = Math.max(Number(pageBox.getAttribute('value')) - 1, 1);
-                    
                     // Set the search to be the original search query.
                     var searchBox = document.getElementById('query');
-                    searchBox.value = searchBox.getAttribute('value');
-                    ">
+                    searchBox.value = searchBox.getAttribute('value');">
                     <label for="PageNumber">Page</label>
                     <input type="text" name="PageNumber" id="pageNumber" onkeydown="
                     var pageBox = document.getElementById('pageNumber');
                     var currentPage = pageBox.value;
                     var maxPage = document.getElementById('maxPageNumber').textContent;
-
                     // If enter key pressed, correct the page to be between 1 and max page.
                     if (event.keyCode === 13) {
                         if (!Number.isNaN(currentPage)) {
                             pageBox.value = Math.max(Math.min(Number(currentPage), Number(maxPage)), 1);
                         }
-
                         // Set the search to be the original search query.
                         var searchBox = document.getElementById('query');
-                        searchBox.value = searchBox.getAttribute('value');
-                    }
-
-                    ">
-                    <!--<input type="submit" name="Submit" value="Go!">-->
+                        searchBox.value = searchBox.getAttribute('value');}">
                     <label for="MaxPageNumberOf">of</label>
                     <label for="MaxPageNumber" id="maxPageNumber"></label>
                     <input type="submit" name="frontPage" value=">" onclick="
                     var pageBox = document.getElementById('pageNumber');
                     var pageNumber = document.getElementById('maxPageNumber').textContent;
                     pageBox.value = Math.min(Number(pageBox.getAttribute('value')) + 1, Number(pageNumber));
-                    
                     // Set the search to be the original search query.
                     var searchBox = document.getElementById('query');
-                    searchBox.value = searchBox.getAttribute('value');
-                    ">
-                </div>
-            </form>
+                    searchBox.value = searchBox.getAttribute('value');">
+            </div>
         </div>
     </body>
 </html>

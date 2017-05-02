@@ -7,8 +7,8 @@
             #pageNumberArea > * {
                 font-size: 24pt;
             }
-            #onClk:link {
-                color:white;
+            ._onClk {
+                color:#FFFF00;
             }
             #sp{
                 color:white;
@@ -57,6 +57,30 @@
                 -moz-box-sizing: border-box;
                 -webkit-box-sizing: border-box;
                 box-shadow: 2px 2px 4px 0 #ccc;
+            }
+
+            .resultImage.text {
+                opacity: 0;
+            }
+
+            .resultImage:hover {
+                display: inline-block;
+                /*margin: 0 0 1em;
+                width: 100%;*/
+                width: 100%;
+                margin-left: 10px;
+                margin-right: 10px;
+                margin-top: 10px;
+                margin-bottom: 10px;
+                box-sizing: border-box;
+                -moz-box-sizing: border-box;
+                -webkit-box-sizing: border-box;
+                box-shadow: -10px -10px 5px cyan;
+                opacity: 1;
+            }
+
+            .resultImage:hover.text {
+                opacity: 1;
             }
 
             .tagname {

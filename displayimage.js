@@ -1,14 +1,16 @@
 "use strict";
 
-var https = require("https");
-var http = require("http");
+var https = require('https');
+var http = require('http');
 var cheerio = require('cheerio');
+var store = require('store');
 
 // Workaround for storing page info.
 var jsonResponse = null;
 const adobeMode = true;
-const imagesPerPage = adobeMode ? 500 : 100;
+const imagesPerPage = adobeMode ? 64 : 100;
 var tagFrequencies = {};
+
 /**
  * Parses the search query and write the images to the HTML page.
  * 
@@ -97,69 +99,45 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
             response.on("end", function(){
                 let tags = JSON.parse(info);
                 let keys = Object.keys(tags);
-                //todo make a forEach function call on the keys.
-                for (let key of keys) {
-                    var keywords = tags[key]["keywords"];
-                    //do another forEach function call for the keywords.
-                    for (var i = 0; i < keywords.length; i++) {
-                        if (tagFrequencies[keywords[i].name] == undefined) {
-                            tagFrequencies[keywords[i].name] = 1;
+
+                keys.forEach(function(element, index, array){             
+                    tags[element]["keywords"].forEach(function(element, index, array) {
+                        if (tagFrequencies[element.name] == undefined) {
+                            tagFrequencies[element.name] = 1;
                         } else {
-                            tagFrequencies[keywords[i].name] += 1;
+                            tagFrequencies[element.name] += 1;
                         }
-                    }
-                }
-                var resultTags = "";
-                let tagKeys = Object.keys(tagFrequencies).sort(function(a,b){ return tagFrequencies[b] - tagFrequencies[a]});
-                var length = tagKeys.length;
-                for (let i = 0; i < length; i++){
-                    resultTags += encodeURIComponent(tagKeys[i]) + "|" + encodeURIComponent(tagFrequencies[tagKeys[i]]);
-                    if (i != length - 1 ) {
-                        resultTags += ",";
-                    }
-                }
+                    });
+                });
+
+                /* Check local storage for tags*/
                 var results;
-                //calculate the deltas
-                if (fullQuery.tagInfo.length > 0) {
-                    let delta = deltaToTagList(fullQuery.tagInfo, resultTags);
-                    //key: tag value: difference
-                    results = Object.keys(delta).sort(function(a,b) { return delta[b] - delta[a]});
-                    //console.log(results);
-                }
-                var tagValues;
-                var tagsHtml;
-                var thumbnailsHtml;
-                var thumbnails;
-                // Add the Tags to the hidden form
-                if (results != undefined || results!= null) {
-                    // add the resulting deltas
-                    tagValues = $('#tags').val(JSON.stringify(results));
-                    //place tags on the top of the page.
-                    var tagATag = results.slice(0,10).map(function(index){
-                        return `
-                        <span class="_resulttag">
-                            <a href="#" onclick="
-                                document.getElementById('query').value+=' `+ index +`';
-                                document.getElementById('mainForm').submit();">
-                                    <span>${index}</span>
-                            </a>
-                        </span>`});
-                    $('#displaytags').append(tagATag);
+                let theTags = store.get('tags');
+                let displayTags = {};
+                if (theTags === undefined || theTags === null) {
+                    //sort the tags in decreasing order
+                    results = sortKeysDecreasing(tagFrequencies);
+                    results.forEach(function(element, index, array){ displayTags[element] = tagFrequencies[element] });
+                    store.set('tags', displayTags);
                 } else {
-                    tagsHtml = $('#tags').val(resultTags);
+                    //calculate delta
+                    let delta = calcDelta(theTags, tagFrequencies);
+                    results = sortKeysDecreasing(delta);
+                    results.forEach(function(element, index, array){ displayTags[element] = delta[element] });
+                    store.set('tags', displayTags);
                 }
 
-                
-                thumbnailsHtml = $('#imageDiv').append(thumbnailList);
-                thumbnails = thumbnailsHtml.children('img');
+                //place tags on the top of the page.
+                var tagATag = createTagHTML(results, fullQuery);
+                $('#displaytags').append(tagATag);
+                var thumbnailsHtml = $('#imageDiv').append(thumbnailList);
+                var thumbnails = thumbnailsHtml.children('img');
                 
                 thumbnails.addClass('resultImage');
                 thumbnails.attr('onclick', `
                 document.getElementById('urlQuery').value = this.getAttribute('src');
                 document.getElementById('mainForm').submit();
                 `);
-
-                // Write page numbers
 
                 // Check for valid page number inputs.
                 let resultsCount = getNumberOfResults(body);
@@ -178,30 +156,64 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
                 clientResponse.write($.html());
                 clientResponse.end();
             });
+
+            response.on("error",(e)=> {
+                console.log(`Got Error ${e.message}`);
+            });
         });
-        
     });
 }
 
-/** 
- * @returns  
+/**
+ * @param [object Array] results the array of keys from decreasing order
+ * @param {object} fullQuery the information with the query by client
  */
-function deltaToTagList(tags1, tags2) {
-    //todo calculate tags1 = priorTags and tags2 newtags.
-    var priorTags = tags1.split(",");
-    var newTags = tags2.split(",");
-
-
-    var priorTagsObj = {};
-    var newTagsObj = {};
-    for (var i=0; i<priorTags; i++) { 
-        priorTagsObj[priorTags[i].split("|")[0]] = priorTags[i].split("|")[1];
-    }
-    for (var j=0; j<priorTags.length; j++) { 
-        newTagsObj[newTags[j].split("|")[0]] = newTags[j].split("|")[1];
-    }
-    return calcDelta(priorTagsObj, newTagsObj);
+function createTagHTML(results, fullQuery) {
+    return results.slice(0,10).map(function(element,index, array){
+        var words = decodeURIComponent(fullQuery['tagQuery']);
+        let newTag = ``;
+        if (!isAQuery(words, element)) {
+            newTag += `<span class="_resulttag">
+                        <a class="_onClk" href="#" onclick="
+                            document.getElementById('query').value+=' `+ element +`';
+                            document.getElementById('mainForm').submit();">
+                            <span class="sp">${element}</span>
+                        </a>
+                        </span>`;
+        }
+        return newTag;
+    });
 }
+
+/**
+ * checks to see if the value matches any of the queries
+ * @param {object} words 
+ * @param {object} value 
+ */
+function isAQuery(words, value) {
+    let splitWords = words.split(" ");
+    if (words === value) {
+        return true;
+    }
+    for (var i = 0; i < splitWords.length; i++) {
+        if (value === splitWords[i]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * @returns [object Array] the sorted keys from largest to smallest
+ * 
+ */
+function sortKeysDecreasing(obj) {
+    return Object.keys(obj).sort(function(a,b){ return obj[b] - obj[a] });
+}
+
+/**
+ * @returns {Object} the delta object containing the results.   
+ */
 
 function calcDelta(oldResults, newResults) {
     var delta = {};
@@ -247,7 +259,6 @@ function getThumbnails(response) {
         ids:ids,
         tags:imageList
     };
-
     return obj;
 }
 /**
@@ -263,16 +274,19 @@ function getNumberOfResults(response) {
     if (typeof resultCount !== "undefined") {
         return Number(resultCount);
     }
-
     return 0;
 }
-// Backup code
+
+/** 
+ * main logic of app
+ * 
+ */
 var fs = require('fs');
 var url = require('url');
 var querystring = require('querystring');
 function display_image() {
     http.createServer(function (request, response) {
-        if (request.method === "GET") {
+        if (request.method === "GET" && request.headers['accept'].includes('text/html')) {
                 let body = "";
                 request.on('data', function (data) {
                     body += data.toString();
@@ -288,15 +302,6 @@ function display_image() {
                     let encodedPageNumber = encodeURIComponent(formData['PageNumber']);
                     let encodedUrl = encodeURIComponent(formData['URLQuery']);
 
-                    let priorTags = "";
-                    if (rawQueries != null) {
-                        let tagsIndex = rawQueries.indexOf("tags=");
-                        if (tagsIndex > 0) {
-                            let priorTagsString = rawQueries.substring(tagsIndex+"tags=".length);
-                            let ampersandIndex = priorTagsString.indexOf("&");
-                            priorTags = decodeURIComponent(priorTagsString.substring(0,ampersandIndex));
-                        }
-                    }
                     if (encodedPageNumber === undefined) {
                         encodedPageNumber = Math.max(encodedPageNumber, 1);
                     } else if (!Number.isInteger(Number(encodedPageNumber))) {
@@ -327,8 +332,7 @@ function display_image() {
                     var fullQuery = {
                         tagQuery: (typeof encodedQuery !== "undefined") ? encodedQuery : "",
                         urlQuery: (typeof encodedUrl !== "undefined") ? encodedUrl : "",
-                        pageNumber: encodedPageNumber,
-                        tagInfo: (typeof priorTags !== "undefined") ? priorTags : ""
+                        pageNumber: encodedPageNumber
                     };
 
                     parseSearchQuery($, fullQuery, response);

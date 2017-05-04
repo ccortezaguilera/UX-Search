@@ -3,12 +3,14 @@
     <head>
         <meta charset="utf8">
         <!--<link rel="stylesheet" href="style.css">-->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
         <style>
             #pageNumberArea > * {
                 font-size: 24pt;
             }
             ._onClk {
                 color:#FFFF00;
+                font-size: 22pt;
             }
             #sp{
                 color:white;
@@ -31,10 +33,9 @@
                 font-size: 24pt;
             }
 
-            #searchFull > input[type="submit"] {
+            #search-text-input-button {
+                font-size: 24pt;
                 width: 120px;
-                font: 24pt;
-                
             }
 
             body {
@@ -122,7 +123,7 @@
                         }
                     }
                     "/>
-                    <input type="submit" name="Submit" class="search-text-input" onclick="
+                    <input type="submit" name="Submit" class="glyphicon" id="search-text-input-button" value="&#xe003;" onclick="
                     var searchBox = document.getElementById('query');
                     if (searchBox.value !== searchBox.getAttribute('value')) {
                         var pageBox = document.getElementById('pageNumber');

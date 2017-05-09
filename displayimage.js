@@ -26,49 +26,7 @@ const searchSimilarUrl = `search_parameters[similar_url]`;
  * @param {http.ServerResponse} response 
  */
 function parseSearchQuery($, fullQuery, response) {
-    // Split query and add to URL
-    let host;
-    let fullPath;
-    let pathArguments = {};
-    if (adobeMode) {
-        host = "stock.adobe.io";
-        fullPath = "/Rest/Media/1/Search/Files?";
-        pathArguments[searchWords] = fullQuery.tagQuery;
-        pathArguments[searchLimit] = imagesPerPage;
-        pathArguments[searchOffset] = (fullQuery.pageNumber - 1) * pathArguments[searchLimit];
-        pathArguments[searchSimilarUrl] = fullQuery.urlQuery;
-    } else {
-        host = "www.andyedmonds.com";
-        fullPath = "/wp-content/stock/search.php?";
-        pathArguments[`q`] = fullQuery.tagQuery;
-        pathArguments[`limit`] = imagesPerPage;
-        pathArguments[`offset`] = (fullQuery.pageNumber - 1) * pathArguments[`limit`];
-    }
-    
-    for (let key in pathArguments) {
-        fullPath += `${key}=${pathArguments[key]}&`;
-    }
-
-    var options = {
-        hostname: host,
-        path: fullPath,
-        method: "GET",
-        headers: {
-            'X-Product': 'Photoshop/15.2.0',
-            'x-api-key': '196dd2bfb89244c694211114553dae9e'
-        }
-    };
-
-    if (adobeMode) {
-        batchRequests($, response, fullQuery);
-        /*https.get(options, function (mrEdmondResponse) {
-            sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, response);
-        });*/
-    } else {
-        http.get(options, function (mrEdmondResponse) {
-            sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, response);
-        });
-    }
+    batchRequests($, response, fullQuery);
 }
 
 /*** 
@@ -107,7 +65,6 @@ function batchRequests(cheerio$, response, query) {
                 let thumbnailList = obj["tags"];
                 let tagInfo = obj["ids"];
                 listThumbnails.push(thumbnailList);
-                //todo batch up also the id requests
                 var idOptions = {
                         hostname: "www.andyedmonds.com",
                         path: "/wp-content/stock/search_id.php?ids=" + tagInfo,
@@ -120,213 +77,84 @@ function batchRequests(cheerio$, response, query) {
                         info += data;
                     });
                     idResponse.on("end", function(){
-                            let tags = JSON.parse(info);
-                            let keys = Object.keys(tags);
-                            requestsCounter += 1;
-                        
-                            keys.forEach(function(element, index, array){             
-                                tags[element]["keywords"].forEach(function(element, index, array) {
+                        let tags = JSON.parse(info);
+                        let keys = Object.keys(tags);
+                        requestsCounter += 1;
+                        keys.forEach(function(element, index, array){             
+                            tags[element]["keywords"].forEach(function(element, index, array) {
                                 if (tagFrequencies[element.name] == undefined) {
                                     tagFrequencies[element.name] = 1;
                                 }  else {
                                     tagFrequencies[element.name] += 1;
                                 }
-                                });
                             });
-                            
-                            if (requestsCounter  == numRequest && listThumbnails.length == numRequest) {
-                        /* Check local storage for tags*/
-                        var results;
-                        let theTags = store.get('tags');
-                        let displayTags = {};
-                        if (theTags === undefined || theTags === null) {
-                            //sort the tags in decreasing order
-                            results = sortKeysDecreasing(tagFrequencies);
-                            results.forEach(function(element, index, array){ displayTags[element] = tagFrequencies[element] });
-                            store.set('tags', displayTags);
-                        } else {
-                            //calculate delta
-                            let delta = calcDelta(theTags, tagFrequencies);
-                            results = sortKeysDecreasing(delta);
-                            results.forEach(function(element, index, array){ displayTags[element] = delta[element] });
-                            store.set('tags', displayTags);
-                        }
-
-                        //place tags on the top of the page.
-                        var tagATag = createTagHTML(results, query);
-                        cheerio$('#displaytags').append(tagATag);
-                        listThumbnails.forEach(function(element){
-                            var thumbnailsHtml = cheerio$('#imageDiv').append(element);
-                            var thumbnails = thumbnailsHtml.children('img');
-                            thumbnails.addClass('resultImage');
-                            thumbnails.attr('onclick', `
-                                document.getElementById('urlQuery').value = this.getAttribute('src');
-                                document.getElementById('mainForm').submit();
-                                `);
                         });
+                        var booleanResult = (requestsCounter == numRequest && listThumbnails.length == numRequest);
+                        console.log(booleanResult); 
+                        if (requestsCounter == numRequest && listThumbnails.length == numRequest) {
+                            /* Check local storage for tags*/
+                            var results;
+                            let theTags = store.get('tags');
+                            let displayTags = {};
+                            if (theTags === undefined || theTags === null) {
+                                //sort the tags in decreasing order
+                                results = sortKeysDecreasing(tagFrequencies);
+                                results.forEach(function(element, index, array){ displayTags[element] = tagFrequencies[element] });
+                                store.set('tags', displayTags);
+                            } else {
+                                //calculate delta
+                                let delta = calcDelta(theTags, tagFrequencies);
+                                results = sortKeysDecreasing(delta);
+                                results.forEach(function(element, index, array){ displayTags[element] = delta[element] });
+                                store.set('tags', displayTags);
+                            }
 
+                            //place tags on the top of the page.
+                            var tagATag = createTagHTML(results, query);
+                            cheerio$('#displaytags').append(tagATag);
+                            listThumbnails.forEach(function(element){
+                                var thumbnailsHtml = cheerio$('#imageDiv').append(element);
+                                var thumbnails = thumbnailsHtml.children('img');
+                                thumbnails.addClass('resultImage');
+                                thumbnails.attr('onclick', `
+                                    document.getElementById('urlQuery').value = this.getAttribute('src');
+                                    document.getElementById('mainForm').submit();
+                                `);
+                            });
 
-                        // Check for valid page number inputs.
-                        let resultsCount = getNumberOfResults(body);
-                        let pageCount = Math.max(Math.ceil(resultsCount / imagesPerPage), 1);
+                            //TODO Get the correct page count.
 
-                        // Write the page number into the input box.
-                        var pageNumberBox = cheerio$('#pageNumber');
-                        pageNumberBox.val(query.pageNumber);
-                        pageNumberBox.attr('size', Math.floor(Math.log10(pageCount)) + 1);
-                        pageNumberBox.attr('maxlength', Math.floor(Math.log10(pageCount)) + 2);
+                            // Check for valid page number inputs.
+                           /* let resultsCount = getNumberOfResults(body);
+                            let pageCount = Math.max(Math.ceil(resultsCount / imagesPerPage), 1);*/
 
-                        // Write out the max page number
-                        cheerio$('#maxPageNumber').text(`${pageCount}`);
-                        console.log("Ending prior to use");
-                        response.writeHead(200, {'Content-Type': 'text/html' });
-                        response.write(cheerio$.html());
-                        response.end();
+                            // Write the page number into the input box.
+                            /*var pageNumberBox = cheerio$('#pageNumber');
+                            pageNumberBox.val(query.pageNumber);
+                            pageNumberBox.attr('size', Math.floor(Math.log10(pageCount)) + 1);
+                            pageNumberBox.attr('maxlength', Math.floor(Math.log10(pageCount)) + 2);*/
 
-                    response.on("error",(e)=> {
+                            // Write out the max page number
+                            //cheerio$('#maxPageNumber').text(`${pageCount}`);
+                            console.log("Ending prior to use");
+                            response.writeHead(200, {'Content-Type': 'text/html' });
+                            response.write(cheerio$.html());
+                            response.end();
+
+                        }
+                    });
+
+                    idResponse.on("error",(e)=> {
                         console.log(`Got Error ${e.message}`);
                     });
-
-
-
-
-                            }
-                    });
                 });
-                    /*console.log(tagInfo);
-                    var idOptions = {
-                        hostname: "www.andyedmonds.com",
-                        path: "/wp-content/stock/search_id.php?ids=" + tagInfo,
-                        method: "GET"
-                    };
-
-                    // Fetch tags from API
-                    http.get(idOptions, function(response) {
-                        var info = ""
-                        response.on("data", function(data){
-                            info += data;
-                        });
-                        response.on("end", function(){
-                            let tags = JSON.parse(info);
-                            let keys = Object.keys(tags);
-
-                            keys.forEach(function(element, index, array){             
-                                tags[element]["keywords"].forEach(function(element, index, array) {
-                                if (tagFrequencies[element.name] == undefined) {
-                                    tagFrequencies[element.name] = 1;
-                                }  else {
-                                    tagFrequencies[element.name] += 1;
-                                }
-                                });
-                            });*/
-
-
-                
             });
+
+            mrEdmondResponse.on("error", (e)=>{
+                console.log(`Got error ${e.message}`);
+            })
         });
     }
-}
-
-
-/**
- * Sends a request to Mr. Edmonds' website, which should send back a JSON
- * formatted document. Then, write all the thumbnails to the response to the
- * client.
- * 
- * @param {CheerioStatic} $ 
- * @param {http.ServerResponse} mrEdmondResponse 
- * @param {http.ServerResponse} clientResponse 
- */
-function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
-    var body = "";
-    mrEdmondResponse.on("data", function (data) {
-        body += data;
-    });
-    
-    mrEdmondResponse.on("end", function () {
-        // Write images
-        jsonResponse = body;
-        let obj = getThumbnails(body);
-        let thumbnailList = obj["tags"];
-        let tagInfo = obj["ids"];
-        
-        var options = {
-            hostname: "www.andyedmonds.com",
-            path: "/wp-content/stock/search_id.php?ids=" + tagInfo,
-            method: "GET"
-        };
-        // Fetch tags from API
-        http.get(options, function(response) {
-            var info = ""
-            response.on("data", function(data){
-                info += data;
-            });
-            response.on("end", function(){
-                let tags = JSON.parse(info);
-                let keys = Object.keys(tags);
-
-                keys.forEach(function(element, index, array){             
-                    tags[element]["keywords"].forEach(function(element, index, array) {
-                        if (tagFrequencies[element.name] == undefined) {
-                            tagFrequencies[element.name] = 1;
-                        } else {
-                            tagFrequencies[element.name] += 1;
-                        }
-                    });
-                });
-
-                /* Check local storage for tags*/
-                var results;
-                let theTags = store.get('tags');
-                let displayTags = {};
-                if (theTags === undefined || theTags === null) {
-                    //sort the tags in decreasing order
-                    results = sortKeysDecreasing(tagFrequencies);
-                    results.forEach(function(element, index, array){ displayTags[element] = tagFrequencies[element] });
-                    store.set('tags', displayTags);
-                } else {
-                    //calculate delta
-                    let delta = calcDelta(theTags, tagFrequencies);
-                    results = sortKeysDecreasing(delta);
-                    results.forEach(function(element, index, array){ displayTags[element] = delta[element] });
-                    store.set('tags', displayTags);
-                }
-
-                //place tags on the top of the page.
-                var tagATag = createTagHTML(results, fullQuery);
-                $('#displaytags').append(tagATag);
-                var thumbnailsHtml = $('#imageDiv').append(thumbnailList);
-                var thumbnails = thumbnailsHtml.children('img');
-                
-                thumbnails.addClass('resultImage');
-                thumbnails.attr('onclick', `
-                document.getElementById('urlQuery').value = this.getAttribute('src');
-                document.getElementById('mainForm').submit();
-                `);
-
-                // Check for valid page number inputs.
-                let resultsCount = getNumberOfResults(body);
-                let pageCount = Math.max(Math.ceil(resultsCount / imagesPerPage), 1);
-
-                // Write the page number into the input box.
-                var pageNumberBox = $('#pageNumber');
-                pageNumberBox.val(fullQuery.pageNumber);
-                pageNumberBox.attr('size', Math.floor(Math.log10(pageCount)) + 1);
-                pageNumberBox.attr('maxlength', Math.floor(Math.log10(pageCount)) + 2);
-
-                // Write out the max page number
-                $('#maxPageNumber').text(`${pageCount}`);
-                console.log("Ending prior to use");
-                clientResponse.writeHead(200, {'Content-Type': 'text/html' });
-                clientResponse.write($.html());
-                clientResponse.end();
-            });
-
-            response.on("error",(e)=> {
-                console.log(`Got Error ${e.message}`);
-            });
-        });
-    });
 }
 
 /**

@@ -4,6 +4,10 @@
         <meta charset="utf8">
         <!--<link rel="stylesheet" href="style.css">-->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://sliptree.github.io/bootstrap-tokenfield/dist/css/bootstrap-tokenfield.css">
+        <script type="text/javascript" src="https://code.jquery.com/jquery-1.9.1.js"></script>
+        <script type="text/javascript" src="https://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+        <script type="text/javascript" src="https://sliptree.github.io/bootstrap-tokenfield/dist/bootstrap-tokenfield.js"></script>
         <style>
             #pageNumberArea > * {
                 font-size: 24pt;
@@ -16,7 +20,7 @@
                 color:white;
             }
 
-            .query {
+            #query {
                 font-size: 1.5rem;
                 height: 80px;
                 padding: 20px 28px;
@@ -24,7 +28,7 @@
                 padding-right: 28px;
                 padding-bottom: 20px;
                 padding-left: 28px;
-                width: 100%;
+                width: 80%;
                 font-weight: 300;
                 box-sizing: border-box;
             }
@@ -170,5 +174,14 @@
                     searchBox.value = searchBox.getAttribute('value');">
             </div>
         </div>
+        <script>
+            $('#query').tokenfield({
+                autocomplete: {
+                    source: [ 'red' ],
+                    delay: 100
+                },
+                showAutocompleteOnFocus: true
+            });
+        </script>
     </body>
 </html>

@@ -175,9 +175,18 @@
             </div>
         </div>
         <script>
+            var tags = [];
+
+            var tagsParent = $('.sp');
+
+            tagsParent.each(function() {
+                tags.push($(this).text());
+            });
+                
+
             $('#query').tokenfield({
                 autocomplete: {
-                    source: [ 'red' ],
+                    source: tags,
                     delay: 100
                 },
                 showAutocompleteOnFocus: true

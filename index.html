@@ -34,16 +34,16 @@
             }
 
             #searchFull > * {
-                font-size: 24pt;
+                font-size: 18pt;
             }
 
             .tokenfield .token {
-                height: 32pt;
+                height: auto;
             }
 
             #searchFull {
-                min-height: 24pt;
-                font-size: 24pt;
+                min-height: auto;
+                font-size: 18pt;
             }
 
             #search-text-input-button {
@@ -128,8 +128,7 @@
         <div align="center" id= "searchbar">
             <form method="GET" id="mainForm" action="http://localhost:8888/">
                 <div id="searchFull">
-                    <!--placeholder="&nbsp;Search high-quality images, graphics and videos"-->
-                    <input type="text" name="q" id="query"  onkeydown="
+                    <input type="text" name="q" class="form-control" id="query" placeholder="&nbsp;Search high-quality images, graphics and videos" onkeydown="
                     if (event.keyCode === 13) {
                         if (this.value !== this.getAttribute('value')) {
                             var pageBox = document.getElementById('pageNumber');
@@ -199,7 +198,8 @@
                     source: tags,
                     delay: 100
                 },
-                //showAutocompleteOnFocus: true
+                delimiter: [ ' ', ',' ],
+                showAutocompleteOnFocus: true
             });
 
             $('.ui-helper-hidden-accessible').remove();

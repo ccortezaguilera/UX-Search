@@ -128,7 +128,8 @@
         <div align="center" id= "searchbar">
             <form method="GET" id="mainForm" action="http://localhost:8888/">
                 <div id="searchFull">
-                    <input type="search" name="q" id="query" placeholder="&nbsp;Search high-quality images, graphics and videos" onkeydown="
+                    <!--placeholder="&nbsp;Search high-quality images, graphics and videos"-->
+                    <input type="text" name="q" id="query"  onkeydown="
                     if (event.keyCode === 13) {
                         if (this.value !== this.getAttribute('value')) {
                             var pageBox = document.getElementById('pageNumber');
@@ -198,8 +199,10 @@
                     source: tags,
                     delay: 100
                 },
-                showAutocompleteOnFocus: true
+                //showAutocompleteOnFocus: true
             });
+
+            $('.ui-helper-hidden-accessible').remove();
         </script>
     </body>
 </html>

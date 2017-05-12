@@ -28,9 +28,15 @@
                 padding-right: 28px;
                 padding-bottom: 20px;
                 padding-left: 28px;
-                width: 80%;
                 font-weight: 300;
                 box-sizing: border-box;
+            }
+
+            #search-text-input-button {
+                font-size: 15pt;
+                width: 120px;
+                border-bottom-left-radius: 0;
+                border-top-left-radius: 0;
             }
 
             #searchFull > * {
@@ -44,11 +50,6 @@
             #searchFull {
                 min-height: auto;
                 font-size: 18pt;
-            }
-
-            #search-text-input-button {
-                font-size: 24pt;
-                width: 120px;
             }
 
             body {
@@ -127,8 +128,8 @@
         <div align="center" id="displaytags"></div>
         <div align="center" id= "searchbar">
             <form method="GET" id="mainForm" action="http://localhost:8888/">
-                <div id="searchFull">
-                    <input type="text" name="q" class="form-control" id="query" placeholder="&nbsp;Search high-quality images, graphics and videos" onkeydown="
+                <div id="searchFull" class="input-group">
+                    <input type="text" name="q" class="token-input ui-autocomplete-input" id="query" placeholder="&nbsp;Search high-quality images, graphics and videos" onkeydown="
                     if (event.keyCode === 13) {
                         if (this.value !== this.getAttribute('value')) {
                             var pageBox = document.getElementById('pageNumber');
@@ -136,7 +137,11 @@
                         }
                     }
                     "/>
-                    <input type="submit" name="Submit" class="glyphicon" id="search-text-input-button" value="&#xe003;" onclick="
+                    <span class="input-group-btn">
+                        <button class="btn btn-default glyphicon" id="search-text-input-button" type="submit">&#xe003;</button>
+                    </span>
+
+                    <!--<input type="submit" name="Submit" class="glyphicon" id="search-text-input-button" value="&#xe003;" onclick="
                     var searchBox = document.getElementById('query');
                     if (searchBox.value !== searchBox.getAttribute('value')) {
                         var pageBox = document.getElementById('pageNumber');
@@ -147,7 +152,7 @@
                         tags.value = encodeURIComponent(tags.value);
                         console.log(tags.value);
                     }*/
-                    "/>
+                    "/>-->
                     <input type="hidden" name="URLQuery" id="urlQuery">
                 </div>
             </form>

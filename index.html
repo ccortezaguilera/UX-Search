@@ -52,6 +52,12 @@
                 font-size: 18pt;
             }
 
+            #backButton {
+                text-align: center;
+                align-content: center;
+                align-self: center;
+            }
+
             body {
                 margin: 10px;
             }
@@ -129,7 +135,7 @@
         <div align="center" id= "searchbar">
             <form method="GET" id="mainForm" action="http://localhost:8888/">
                 <div id="searchFull" class="input-group">
-                    <input type="text" name="q" class="token-input ui-autocomplete-input" id="query" placeholder="&nbsp;Search high-quality images, graphics and videos" onkeydown="
+                    <input type="text" name="q" id="query" placeholder="&nbsp;Search high-quality images, graphics and videos" onkeydown="
                     if (event.keyCode === 13) {
                         if (this.value !== this.getAttribute('value')) {
                             var pageBox = document.getElementById('pageNumber');
@@ -138,54 +144,75 @@
                     }
                     "/>
                     <span class="input-group-btn">
-                        <button class="btn btn-default glyphicon" id="search-text-input-button" type="submit">&#xe003;</button>
+                        <button class="btn btn-default glyphicon" id="search-text-input-button" type="submit" onclick="
+                        var searchBox = document.getElementById('query');
+                        if (searchBox.value !== searchBox.getAttribute('value')) {
+                            var pageBox = document.getElementById('pageNumber');
+                            pageBox.value = 1;
+                        }
+                        var tags = document.getElementById('tags');">
+                            &#xe003;
+                        </button>
                     </span>
 
                     <!--<input type="submit" name="Submit" class="glyphicon" id="search-text-input-button" value="&#xe003;" onclick="
-                    var searchBox = document.getElementById('query');
-                    if (searchBox.value !== searchBox.getAttribute('value')) {
-                        var pageBox = document.getElementById('pageNumber');
-                        pageBox.value = 1;
-                    }
-                    var tags = document.getElementById('tags');
+                    
                     /*if (tags.value.length() > 0) {
                         tags.value = encodeURIComponent(tags.value);
                         console.log(tags.value);
                     }*/
                     "/>-->
                     <input type="hidden" name="URLQuery" id="urlQuery">
+                    <input type="hidden" name="PageNumber" id="truePageNumber">
                 </div>
             </form>
             <div align="left" id="imageDiv"></div>
-            <div id="pageNumberArea">
-                    <input type="submit" name="backPage" value="<" onclick="
-                    var pageBox = document.getElementById('pageNumber');
-                    pageBox.value = Math.max(Number(pageBox.getAttribute('value')) - 1, 1);
+            <div id="pageNumberArea" class="input-group">
+                <button class="btn btn-default glyphicon" id="backButton" type="submit" onclick="
+                var pageBox = document.getElementById('pageNumber');
+                pageBox.value = Math.max(Number(pageBox.getAttribute('value')) - 1, 1);
+                // Set the search to be the original search query.
+                var searchBox = document.getElementById('query');
+                searchBox.value = searchBox.getAttribute('value');
+
+                $('#truePageNumber').val(pageBox.value);
+                $('#mainForm').submit();
+                ">
+                    &#xe091;
+                </button>
+                <label for="PageNumber">Page</label>
+                <input type="text" id="pageNumber" onkeydown="
+                var pageBox = document.getElementById('pageNumber');
+                var currentPage = pageBox.value;
+                var maxPage = document.getElementById('maxPageNumber').textContent;
+                // If enter key pressed, correct the page to be between 1 and max page.
+                if (event.keyCode === 13) {
+                    if (!Number.isNaN(currentPage)) {
+                        pageBox.value = Math.max(Math.min(Number(currentPage), Number(maxPage)), 1);
+                    }
                     // Set the search to be the original search query.
                     var searchBox = document.getElementById('query');
-                    searchBox.value = searchBox.getAttribute('value');">
-                    <label for="PageNumber">Page</label>
-                    <input type="text" name="PageNumber" id="pageNumber" onkeydown="
-                    var pageBox = document.getElementById('pageNumber');
-                    var currentPage = pageBox.value;
-                    var maxPage = document.getElementById('maxPageNumber').textContent;
-                    // If enter key pressed, correct the page to be between 1 and max page.
-                    if (event.keyCode === 13) {
-                        if (!Number.isNaN(currentPage)) {
-                            pageBox.value = Math.max(Math.min(Number(currentPage), Number(maxPage)), 1);
-                        }
-                        // Set the search to be the original search query.
-                        var searchBox = document.getElementById('query');
-                        searchBox.value = searchBox.getAttribute('value');}">
-                    <label for="MaxPageNumberOf">of</label>
-                    <label for="MaxPageNumber" id="maxPageNumber"></label>
-                    <input type="submit" name="frontPage" value=">" onclick="
-                    var pageBox = document.getElementById('pageNumber');
-                    var pageNumber = document.getElementById('maxPageNumber').textContent;
-                    pageBox.value = Math.min(Number(pageBox.getAttribute('value')) + 1, Number(pageNumber));
-                    // Set the search to be the original search query.
-                    var searchBox = document.getElementById('query');
-                    searchBox.value = searchBox.getAttribute('value');">
+                    searchBox.value = searchBox.getAttribute('value');
+                }
+                
+                $('#truePageNumber').val(currentPage);
+                $('#mainForm').submit();
+                ">
+                <label for="MaxPageNumberOf">of</label>
+                <label for="MaxPageNumber" id="maxPageNumber"></label>
+                <button class="btn btn-default glyphicon" id="forwardButton" type="submit" onclick="
+                var pageBox = document.getElementById('pageNumber');
+                var pageNumber = document.getElementById('maxPageNumber').textContent;
+                pageBox.value = Math.min(Number(pageBox.getAttribute('value')) + 1, Number(pageNumber));
+                // Set the search to be the original search query.
+                var searchBox = document.getElementById('query');
+                searchBox.value = searchBox.getAttribute('value');
+
+                $('#truePageNumber').val(pageBox.value);
+                $('#mainForm').submit();
+                ">
+                    &#xe092;
+                </button>
             </div>
         </div>
         <script>

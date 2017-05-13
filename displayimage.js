@@ -135,6 +135,7 @@ function sendRequestToMrEdmond($, fullQuery, mrEdmondResponse, clientResponse) {
                 
                 thumbnails.addClass('resultImage');
                 thumbnails.attr('onclick', `
+                document.getElementById('truePageNumber').value = 1;
                 document.getElementById('urlQuery').value = this.getAttribute('src');
                 document.getElementById('mainForm').submit();
                 `);

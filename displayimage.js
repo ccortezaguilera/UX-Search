@@ -326,6 +326,7 @@ function display_image() {
                     }
 
                     if (encodedUrl) {
+                        $('#urlQuery').val(formData['URLQuery']);
                         console.log("EncodedURL: ");
                         console.log(encodedUrl);
                     }

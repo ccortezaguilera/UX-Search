@@ -138,7 +138,7 @@
                     <input type="text" name="q" id="query" placeholder="&nbsp;Search high-quality images, graphics and videos" onkeydown="
                     if (event.keyCode === 13) {
                         if (this.value !== this.getAttribute('value')) {
-                            var pageBox = document.getElementById('pageNumber');
+                            var pageBox = document.getElementById('truePageNumber');
                             pageBox.value = 1;
                         }
                     }
@@ -147,7 +147,7 @@
                         <button class="btn btn-default glyphicon" id="search-text-input-button" type="submit" onclick="
                         var searchBox = document.getElementById('query');
                         if (searchBox.value !== searchBox.getAttribute('value')) {
-                            var pageBox = document.getElementById('pageNumber');
+                            var pageBox = document.getElementById('truePageNumber');
                             pageBox.value = 1;
                         }
                         var tags = document.getElementById('tags');">
@@ -199,7 +199,7 @@
                 $('#mainForm').submit();
                 ">
                 <label for="MaxPageNumberOf">of</label>
-                <label for="MaxPageNumber" id="maxPageNumber"></label>
+                <label for="MaxPageNumber" id="maxPageNumber" style="padding-left: 18px;"></label>
                 <button class="btn btn-default glyphicon" id="forwardButton" type="submit" onclick="
                 var pageBox = document.getElementById('pageNumber');
                 var pageNumber = document.getElementById('maxPageNumber').textContent;

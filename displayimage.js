@@ -175,6 +175,7 @@ function createTagHTML(results, fullQuery) {
         if (!isAQuery(words, element)) {
             newTag += `<span class="_resulttag">
                         <a class="_onClk" href="#" onclick="
+                            document.getElementById('truePageNumber').value = 1;
                             document.getElementById('query').value+=' `+ element +`';
                             document.getElementById('mainForm').submit();">
                             <span class="sp">${element}</span>

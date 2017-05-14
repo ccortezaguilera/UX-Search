@@ -26,11 +26,20 @@ const searchSimilarUrl = `search_parameters[similar_url]`;
  * @param {http.ServerResponse} response 
  */
 function parseSearchQuery($, fullQuery, response) {
-    asyncThumbnailRequest($,response, fullQuery,1).then(function(value){
+    return new Promise(function(resolve, reject){
+        
+        asyncThumbnailRequest($,response, fullQuery,1).then(function(value){
         asyncIdRequest($, response, fullQuery, value);
+        //console.log(value);
     });
+    }
     //batchRequests($, response, fullQuery);
 }
+
+function batchRequest() {
+
+}
+
 
 function asyncIdRequest(cheerio$, response, fullQuery, obj){
         var idOptions = {
@@ -128,10 +137,10 @@ function asyncThumbnailRequest(cheerio$, response, query, offset){
             var fullPath = "/Rest/Media/1/Search/Files?";
                 // get the key of limit
                 var parameters = "";
-                parameters += searchWords + '=' + query.tagQuery + '&';
-                parameters += searchLimit + '=' + imagesPerPage + '&';
-                parameters += searchOffset + '=' + (offset * imagesPerPage) + '&';
-                parameters += searchSimilarUrl + '=' + query.urlQuery;
+                parameters += searchWords + '=' + query.tagQuery;// + '&';
+                //parameters += searchLimit + '=' + imagesPerPage + '&';
+                //parameters += searchOffset + '=' + (offset * imagesPerPage) + '&';
+                //parameters += searchSimilarUrl + '=' + query.urlQuery;
                 var options = {
                     hostname: host,
                     path: fullPath+parameters,
@@ -143,7 +152,7 @@ function asyncThumbnailRequest(cheerio$, response, query, offset){
                 };
             console.log("Path: ");
             console.log(host+options.path);
-           http.get(options, function(mrEdmondResponse){
+           https.get(options, function(mrEdmondResponse){
                 var body = "";
                 mrEdmondResponse.on('data',function(data){
                     body += data;

@@ -26,8 +26,140 @@ const searchSimilarUrl = `search_parameters[similar_url]`;
  * @param {http.ServerResponse} response 
  */
 function parseSearchQuery($, fullQuery, response) {
-    batchRequests($, response, fullQuery);
+    asyncThumbnailRequest($,response, fullQuery,1).then(function(value){
+        asyncIdRequest($, response, fullQuery, value);
+    });
+    //batchRequests($, response, fullQuery);
 }
+
+function asyncIdRequest(cheerio$, response, fullQuery, obj){
+        var idOptions = {
+                        hostname: "www.andyedmonds.com",
+                        path: "/wp-content/stock/search_id.php?ids=" + tagInfo,
+                        method: "GET"
+                    };
+
+                http.get(idOptions,function(idResponse){
+                    var info = "";
+                    idResponse.on("data", function(data){
+                        info += data;
+                    });
+                    idResponse.on("end", function(){
+                        let tags = JSON.parse(info);
+                        let keys = Object.keys(tags);
+                        requestsCounter += 1;
+                        keys.forEach(function(element, index, array){             
+                            tags[element]["keywords"].forEach(function(element, index, array) {
+                                if (tagFrequencies[element.name] == undefined) {
+                                    tagFrequencies[element.name] = 1;
+                                }  else {
+                                    tagFrequencies[element.name] += 1;
+                                }
+                            });
+                        });
+                        var booleanResult = (requestsCounter == numRequest && listThumbnails.length == numRequest);
+                        console.log(booleanResult); 
+                        if (requestsCounter == numRequest && listThumbnails.length == numRequest) {
+                            /* Check local storage for tags*/
+                            var results;
+                            let theTags = store.get('tags');
+                            let displayTags = {};
+                            if (theTags === undefined || theTags === null) {
+                                //sort the tags in decreasing order
+                                results = sortKeysDecreasing(tagFrequencies);
+                                results.forEach(function(element, index, array){ displayTags[element] = tagFrequencies[element] });
+                                store.set('tags', displayTags);
+                            } else {
+                                //calculate delta
+                                let delta = calcDelta(theTags, tagFrequencies);
+                                results = sortKeysDecreasing(delta);
+                                results.forEach(function(element, index, array){ displayTags[element] = delta[element] });
+                                store.set('tags', displayTags);
+                            }
+
+                            //place tags on the top of the page.
+                            var tagATag = createTagHTML(results, query);
+                            cheerio$('#displaytags').append(tagATag);
+                            listThumbnails.forEach(function(element){
+                                var thumbnailsHtml = cheerio$('#imageDiv').append(element);
+                                var thumbnails = thumbnailsHtml.children('img');
+                                thumbnails.addClass('resultImage');
+                                thumbnails.attr('onclick', `
+                                    document.getElementById('urlQuery').value = this.getAttribute('src');
+                                    document.getElementById('mainForm').submit();
+                                `);
+                            });
+
+                            //TODO Get the correct page count.
+
+                            // Check for valid page number inputs.
+                           /* let resultsCount = getNumberOfResults(body);
+                            let pageCount = Math.max(Math.ceil(resultsCount / imagesPerPage), 1);*/
+
+                            // Write the page number into the input box.
+                            /*var pageNumberBox = cheerio$('#pageNumber');
+                            pageNumberBox.val(query.pageNumber);
+                            pageNumberBox.attr('size', Math.floor(Math.log10(pageCount)) + 1);
+                            pageNumberBox.attr('maxlength', Math.floor(Math.log10(pageCount)) + 2);*/
+
+                            // Write out the max page number
+                            //cheerio$('#maxPageNumber').text(`${pageCount}`);
+                            console.log("Ending prior to use");
+                            response.writeHead(200, {'Content-Type': 'text/html' });
+                            response.write(cheerio$.html());
+                            response.end();
+
+                        }
+                    });
+
+                    idResponse.on("error",(e)=> {
+                        console.log(`Got Error ${e.message}`);
+                    });
+                });
+}
+
+
+function asyncThumbnailRequest(cheerio$, response, query, offset){
+    return new Promise(
+        function(resolve, reject){
+            var listThumbnails = [];
+            var listIds = [];
+            var host = "stock.adobe.io";
+            var fullPath = "/Rest/Media/1/Search/Files?";
+                // get the key of limit
+                var parameters = "";
+                parameters += searchWords + '=' + query.tagQuery + '&';
+                parameters += searchLimit + '=' + imagesPerPage + '&';
+                parameters += searchOffset + '=' + (offset * imagesPerPage) + '&';
+                parameters += searchSimilarUrl + '=' + query.urlQuery;
+                var options = {
+                    hostname: host,
+                    path: fullPath+parameters,
+                    method: "GET",
+                    headers: {
+                        'X-Product': 'Photoshop/15.2.0',
+                        'x-api-key': '196dd2bfb89244c694211114553dae9e'
+                    }
+                };
+            console.log("Path: ");
+            console.log(host+options.path);
+           http.get(options, function(mrEdmondResponse){
+                var body = "";
+                mrEdmondResponse.on('data',function(data){
+                    body += data;
+                });
+                mrEdmondResponse.on('end', function(){
+                    console.log(body);
+                    resolve(getThumbnails(body));
+                });
+                mrEdmondResponse.on('error', function(error){
+                    reject(error);
+                });
+           });
+        });
+}
+
+
 
 /*** 
  * 

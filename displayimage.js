@@ -25,6 +25,7 @@ const searchSimilarUrl = `search_parameters[similar_url]`;
  * @param {http.ServerResponse} response 
  */
 function parseSearchQuery($, fullQuery, response) {
+    var thumbnailList = [];
     for (let i = 1; i <= numRequest; i++) {
        asyncThumbnailRequest($,response, fullQuery,i).then(
             function(value){
@@ -32,10 +33,11 @@ function parseSearchQuery($, fullQuery, response) {
                     throw new Error("We couldn't get a correct object");
                 }
                 return asyncIdRequest($, response, fullQuery, value, i).then(
-                    function(requestNumber) {
-                        console.log("request number: " + requestNumber);
-                        if (requestNumber == numRequest) {
-                            console.log("length: " + value['tags'].length);
+                    function(requestResult) {
+                        console.log("request number: " + requestResult.counter);
+                        thumbnailList.push(requestResult.tags);
+                        if (thumbnailList.length == numRequest) {
+                            console.log("Success!!")
                             var results;
                             let theTags = store.get('tags');
                             let displayTags = {};
@@ -55,8 +57,9 @@ function parseSearchQuery($, fullQuery, response) {
                             //place tags on the top of the page.
                             var tagATag = createTagHTML(results, fullQuery);
                             $('#displaytags').append(tagATag);
-                            //listThumbnails.forEach(function(element){
-                                var thumbnailsHtml = $('#imageDiv').append(value['tags']);
+                            thumbnailList.forEach(function(element){
+                                console.log(element.length)
+                                var thumbnailsHtml = $('#imageDiv').append(element);
                                 var thumbnails = thumbnailsHtml.children('img');
                                 thumbnails.addClass('resultImage');
                                 thumbnails.attr('onclick', `
@@ -64,7 +67,7 @@ function parseSearchQuery($, fullQuery, response) {
                                     document.getElementById('mainForm').submit();
                                 `);
                             
-                            //});
+                            });
 
                             //TODO Get the correct page count.
 
@@ -124,7 +127,11 @@ function asyncIdRequest(cheerio$, response, fullQuery, obj, counter){
                                 }
                             });
                         });
-                    resolve(counter + 1);
+                    let resultTags = {
+                        tags: obj[`tags`],
+                        counter: counter
+                    };
+                    resolve(resultTags);
                     });
                     idResponse.on("error",(e)=> {
                         console.log(`Got Error ${e.message}`);
@@ -142,10 +149,10 @@ function asyncThumbnailRequest(cheerio$, response, query, offset){
             var fullPath = "/Rest/Media/1/Search/Files?";
                 // get the key of limit
                 var parameters = "";
-                parameters += searchWords + '=' + query.tagQuery;// + '&';
-                //parameters += searchLimit + '=' + imagesPerPage + '&';
-                //parameters += searchOffset + '=' + (offset * imagesPerPage) + '&';
-                //parameters += searchSimilarUrl + '=' + query.urlQuery;
+                parameters += searchWords + '=' + query.tagQuery + '&';
+                parameters += searchLimit + '=' + imagesPerPage + '&';
+                parameters += searchOffset + '=' + (offset * imagesPerPage) + '&';
+                parameters += searchSimilarUrl + '=' + query.urlQuery;
                 var options = {
                     hostname: host,
                     path: fullPath+parameters,

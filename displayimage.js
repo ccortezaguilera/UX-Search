@@ -15,6 +15,7 @@ const searchWords = 'search_parameters[words]';
 const searchLimit = `search_parameters[limit]`;
 const searchOffset = `search_parameters[offset]`;
 const searchSimilarUrl = `search_parameters[similar_url]`;
+var resultCount;
 
 /**
  * Parses the search query and write the images to the HTML page.
@@ -71,22 +72,21 @@ function parseSearchQuery($, fullQuery, response) {
                             //TODO Get the correct page count.
 
                             // Check for valid page number inputs.
-                           /* let resultsCount = getNumberOfResults(body);
-                            let pageCount = Math.max(Math.ceil(resultsCount / imagesPerPage), 1);*/
+                           
+                            let pageCount = Math.max(Math.ceil(resultCount / (imagesPerPage*numRequest), 1));
 
                             // Write the page number into the input box.
-                            /*var pageNumberBox = cheerio$('#pageNumber');
-                            pageNumberBox.val(query.pageNumber);
+                            var pageNumberBox = $('#pageNumber');
+                            pageNumberBox.val(fullQuery.pageNumber);
                             pageNumberBox.attr('size', Math.floor(Math.log10(pageCount)) + 1);
-                            pageNumberBox.attr('maxlength', Math.floor(Math.log10(pageCount)) + 2);*/
+                            pageNumberBox.attr('maxlength', Math.floor(Math.log10(pageCount)) + 2);
 
                             // Write out the max page number
-                            //cheerio$('#maxPageNumber').text(`${pageCount}`);
+                            $('#maxPageNumber').text(`${pageCount}`);
                             console.log("Ending prior to use");
                             response.writeHead(200, {'Content-Type': 'text/html' });
                             response.write($.html());
                             response.end();
-                            //return;
                         }
                     }
                 );
@@ -166,8 +166,7 @@ function asyncThumbnailRequest(cheerio$, response, query, offset){
                     body += data;
                 });
                 mrEdmondResponse.on('end', function(){
-                    let numResults = getNumberOfResults(body);
-                    console.log("number of results: " + numResults);
+                    resultCount = getNumberOfResults(body);
                     resolve(getThumbnails(body));
                 });
                 mrEdmondResponse.on('error', function(error){

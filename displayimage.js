@@ -11,7 +11,6 @@ const adobeMode = true;
 const numRequest = 8;
 const imagesPerPage = adobeMode ? 64 : 100;
 var tagFrequencies = {};
-var requestsCounter = 0;
 
 const searchWords = 'search_parameters[words]';
 const searchLimit = `search_parameters[limit]`;
@@ -26,50 +25,19 @@ const searchSimilarUrl = `search_parameters[similar_url]`;
  * @param {http.ServerResponse} response 
  */
 function parseSearchQuery($, fullQuery, response) {
-    return new Promise(function(resolve, reject){
-        
-        asyncThumbnailRequest($,response, fullQuery,1).then(function(value){
-        //asyncIdRequest($, response, fullQuery, value);
-        console.log(value);
-    });
-    });
-    //batchRequests($, response, fullQuery);
-}
-
-function batchRequest() {
-
-}
-
-
-function asyncIdRequest(cheerio$, response, fullQuery, obj){
-        var idOptions = {
-                        hostname: "www.andyedmonds.com",
-                        path: "/wp-content/stock/search_id.php?ids=" + tagInfo,
-                        method: "GET"
-                    };
-
-                http.get(idOptions,function(idResponse){
-                    var info = "";
-                    idResponse.on("data", function(data){
-                        info += data;
-                    });
-                    idResponse.on("end", function(){
-                        let tags = JSON.parse(info);
-                        let keys = Object.keys(tags);
-                        requestsCounter += 1;
-                        keys.forEach(function(element, index, array){             
-                            tags[element]["keywords"].forEach(function(element, index, array) {
-                                if (tagFrequencies[element.name] == undefined) {
-                                    tagFrequencies[element.name] = 1;
-                                }  else {
-                                    tagFrequencies[element.name] += 1;
-                                }
-                            });
-                        });
-                        var booleanResult = (requestsCounter == numRequest && listThumbnails.length == numRequest);
-                        console.log(booleanResult); 
-                        if (requestsCounter == numRequest && listThumbnails.length == numRequest) {
-                            /* Check local storage for tags*/
+    for (var i = 1; i <= numRequest; i++) {
+       asyncThumbnailRequest($,response, fullQuery,i).then(
+            function(value){
+                if(!value) {
+                    throw new Error("We couldn't get a correct object");
+                }
+                return asyncIdRequest($, response, fullQuery, value, i).then(
+                    function(requestNumber) {
+                        console.log("request number: " + requestNumber);
+                        if (requestNumber == numRequest) {
+                            console.log(value['tags'].length);
+                            console.log("success!");
+                            console.log(i);
                             var results;
                             let theTags = store.get('tags');
                             let displayTags = {};
@@ -87,17 +55,18 @@ function asyncIdRequest(cheerio$, response, fullQuery, obj){
                             }
 
                             //place tags on the top of the page.
-                            var tagATag = createTagHTML(results, query);
-                            cheerio$('#displaytags').append(tagATag);
-                            listThumbnails.forEach(function(element){
-                                var thumbnailsHtml = cheerio$('#imageDiv').append(element);
+                            var tagATag = createTagHTML(results, fullQuery);
+                            $('#displaytags').append(tagATag);
+                            //listThumbnails.forEach(function(element){
+                            /*    var thumbnailsHtml = $('#imageDiv').append(value['tags']);
                                 var thumbnails = thumbnailsHtml.children('img');
                                 thumbnails.addClass('resultImage');
                                 thumbnails.attr('onclick', `
                                     document.getElementById('urlQuery').value = this.getAttribute('src');
                                     document.getElementById('mainForm').submit();
                                 `);
-                            });
+                            */
+                            //});
 
                             //TODO Get the correct page count.
 
@@ -115,24 +84,64 @@ function asyncIdRequest(cheerio$, response, fullQuery, obj){
                             //cheerio$('#maxPageNumber').text(`${pageCount}`);
                             console.log("Ending prior to use");
                             response.writeHead(200, {'Content-Type': 'text/html' });
-                            response.write(cheerio$.html());
+                            response.write($.html());
                             response.end();
-
+                            //return;
                         }
-                    });
+                    }
+                );
+                // if i == 10 then we move on.
+        });
+    console.log("i is: " + i);
 
+    }
+    //batchRequests($, response, fullQuery);
+}
+
+function batchRequest() {
+
+}
+
+
+function asyncIdRequest(cheerio$, response, fullQuery, obj, counter){
+    return new Promise(function(resolve, reject) {
+        var idOptions = {
+                        hostname: "www.andyedmonds.com",
+                        path: "/wp-content/stock/search_id.php?ids=" + obj[`ids`],
+                        method: "GET"
+                    };
+
+                http.get(idOptions,function(idResponse){
+                    var info = "";
+                    idResponse.on("data", function(data){
+                        info += data;
+                    });
+                    idResponse.on("end", function(){
+                        let tags = JSON.parse(info);
+                        let keys = Object.keys(tags);
+                        keys.forEach(function(element, index, array){             
+                            tags[element]["keywords"].forEach(function(element, index, array) {
+                                if (tagFrequencies[element.name] == undefined) {
+                                    tagFrequencies[element.name] = 1;
+                                }  else {
+                                    tagFrequencies[element.name] += 1;
+                                }
+                            });
+                        });
+                    resolve(counter + 1);
+                    });
                     idResponse.on("error",(e)=> {
                         console.log(`Got Error ${e.message}`);
+                        reject();
                     });
                 });
+    });
 }
 
 
 function asyncThumbnailRequest(cheerio$, response, query, offset){
     return new Promise(
         function(resolve, reject){
-            var listThumbnails = [];
-            var listIds = [];
             var host = "stock.adobe.io";
             var fullPath = "/Rest/Media/1/Search/Files?";
                 // get the key of limit
@@ -150,15 +159,12 @@ function asyncThumbnailRequest(cheerio$, response, query, offset){
                         'x-api-key': '196dd2bfb89244c694211114553dae9e'
                     }
                 };
-            console.log("Path: ");
-            console.log(host+options.path);
            https.get(options, function(mrEdmondResponse){
                 var body = "";
                 mrEdmondResponse.on('data',function(data){
                     body += data;
                 });
                 mrEdmondResponse.on('end', function(){
-                    console.log(body);
                     resolve(getThumbnails(body));
                 });
                 mrEdmondResponse.on('error', function(error){

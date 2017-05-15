@@ -29,10 +29,10 @@ function parseSearchQuery($, fullQuery, response) {
     return new Promise(function(resolve, reject){
         
         asyncThumbnailRequest($,response, fullQuery,1).then(function(value){
-        asyncIdRequest($, response, fullQuery, value);
-        //console.log(value);
+        //asyncIdRequest($, response, fullQuery, value);
+        console.log(value);
     });
-    }
+    });
     //batchRequests($, response, fullQuery);
 }
 

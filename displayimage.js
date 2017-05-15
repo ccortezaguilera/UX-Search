@@ -25,7 +25,7 @@ const searchSimilarUrl = `search_parameters[similar_url]`;
  * @param {http.ServerResponse} response 
  */
 function parseSearchQuery($, fullQuery, response) {
-    for (var i = 1; i <= numRequest; i++) {
+    for (let i = 1; i <= numRequest; i++) {
        asyncThumbnailRequest($,response, fullQuery,i).then(
             function(value){
                 if(!value) {
@@ -35,9 +35,7 @@ function parseSearchQuery($, fullQuery, response) {
                     function(requestNumber) {
                         console.log("request number: " + requestNumber);
                         if (requestNumber == numRequest) {
-                            console.log(value['tags'].length);
-                            console.log("success!");
-                            console.log(i);
+                            console.log("length: " + value['tags'].length);
                             var results;
                             let theTags = store.get('tags');
                             let displayTags = {};
@@ -58,14 +56,14 @@ function parseSearchQuery($, fullQuery, response) {
                             var tagATag = createTagHTML(results, fullQuery);
                             $('#displaytags').append(tagATag);
                             //listThumbnails.forEach(function(element){
-                            /*    var thumbnailsHtml = $('#imageDiv').append(value['tags']);
+                                var thumbnailsHtml = $('#imageDiv').append(value['tags']);
                                 var thumbnails = thumbnailsHtml.children('img');
                                 thumbnails.addClass('resultImage');
                                 thumbnails.attr('onclick', `
                                     document.getElementById('urlQuery').value = this.getAttribute('src');
                                     document.getElementById('mainForm').submit();
                                 `);
-                            */
+                            
                             //});
 
                             //TODO Get the correct page count.
@@ -90,9 +88,7 @@ function parseSearchQuery($, fullQuery, response) {
                         }
                     }
                 );
-                // if i == 10 then we move on.
         });
-    console.log("i is: " + i);
 
     }
     //batchRequests($, response, fullQuery);

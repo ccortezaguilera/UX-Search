@@ -34,10 +34,8 @@ function parseSearchQuery($, fullQuery, response) {
                 }
                 return asyncIdRequest($, response, fullQuery, value, i).then(
                     function(requestResult) {
-                        console.log("request number: " + requestResult.counter);
                         thumbnailList.push(requestResult.tags);
                         if (thumbnailList.length == numRequest) {
-                            console.log("Success!!")
                             var results;
                             let theTags = store.get('tags');
                             let displayTags = {};
@@ -58,7 +56,6 @@ function parseSearchQuery($, fullQuery, response) {
                             var tagATag = createTagHTML(results, fullQuery);
                             $('#displaytags').append(tagATag);
                             thumbnailList.forEach(function(element){
-                                console.log(element.length)
                                 var thumbnailsHtml = $('#imageDiv').append(element);
                                 var thumbnails = thumbnailsHtml.children('img');
                                 thumbnails.addClass('resultImage');
@@ -415,7 +412,6 @@ function display_image() {
                     // Obtain the query information.
                     let formData = querystring.parse(rawQueries);
                     let encodedQuery = encodeURIComponent(formData['q'].replace(" img",""));
-                    //let encodedQuery = encodeURIComponent(formData['q']);
                     let encodedPageNumber = encodeURIComponent(formData['PageNumber']);
                     let encodedUrl = encodeURIComponent(formData['URLQuery']);
 
@@ -444,8 +440,6 @@ function display_image() {
 
                     if (encodedUrl) {
                         $('#urlQuery').val(formData['URLQuery']);
-                        console.log("EncodedURL: ");
-                        console.log(encodedUrl);
                     }
                     var fullQuery = {
                         tagQuery: (typeof encodedQuery !== "undefined") ? encodedQuery : "",

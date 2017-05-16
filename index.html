@@ -157,9 +157,10 @@
         </style>
     </head> 
     <body>
+        <div id="displaytags"></div>
         <div id= "searchbar">
            <div id="logo"> Powered By  &nbsp;<img src="https://as.ftcdn.net/r/v1/pics/e3b26db09522478ae2cf299f82c6df5ba36824e5/all/default/stock_logo.png" height=32/></div>
-            <form method="GET" id="mainForm" action="localhost:8888">
+            <form method="GET" id="mainForm" action="http://localhost:8888/">
                 <div id="searchFull" class="input-group">
                     <input type="text" name="q" id="query" placeholder="&nbsp;Search high-quality images, graphics and videos" onkeydown="
                     if (event.keyCode === 13) {
@@ -192,7 +193,6 @@
                     <input type="hidden" name="PageNumber" id="truePageNumber">
                 </div>
             </form>
-            <div id="displaytags"></div>
             <div align="left" id="imageDiv"></div>
             <div id="pageNumberArea" class="input-group">
                 <button class="btn btn-default glyphicon" id="backButton" type="submit" onclick="
@@ -238,11 +238,41 @@
                 $('#truePageNumber').val(pageBox.value);
                 $('#mainForm').submit();
                 ">
-                    &#xe092;
+                
                 </button>
             </div>
         </div>
         <script>
+			function parseUri (str) {
+				var	o   = parseUri.options,
+					m   = o.parser[o.strictMode ? "strict" : "loose"].exec(str),
+					uri = {},
+					i   = 14;
+
+				while (i--) uri[o.key[i]] = m[i] || "";
+
+				uri[o.q.name] = {};
+				uri[o.key[12]].replace(o.q.parser, function ($0, $1, $2) {
+					if ($1) uri[o.q.name][$1] = $2;
+				});
+
+				return uri;
+			};
+			
+
+			parseUri.options = {
+				strictMode: false,
+				key: ["source","protocol","authority","userInfo","user","password","host","port","relative","path","directory","file","query","anchor"],
+				q:   {
+					name:   "queryKey",
+					parser: /(?:^|&)([^&=]*)=?([^&]*)/g
+				},
+				parser: {
+					strict: /^(?:([^:\/?#]+):)?(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?((((?:[^?#\/]*\/)*)([^?#]*))(?:\?([^#]*))?(?:#(.*))?)/,
+					loose:  /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/
+				}
+			};
+
             var tags = [];
 
             var tagsParent = $('.sp');
@@ -250,8 +280,27 @@
             tagsParent.each(function() {
                 tags.push($(this).text());
             });
+			
+			if(parseUri(document.location).queryKey['URLQuery'] != 'undefined' && parseUri(document.location).queryKey['URLQuery'].length  ) {
+				if(document.getElementById("query").value.indexOf(' img') == -1) document.getElementById("query").value+= ' img'	
+			}
+	
                 
-            $('#query').tokenfield({
+            $('#query').on('tokenfield:initialize', function (e) {
+				window.setTimeout(function() {
+					if(parseUri(document.location).queryKey['URLQuery'] != 'undefined' && parseUri(document.location).queryKey['URLQuery'].length  ) {
+					var tags = $('span.token-label');
+					for(var i=0;i<tags.length;i++) {
+						console.log($(tags[i]).text())
+						if($(tags[i]).text() == 'img') {								
+							var img = document.createElement("IMG");
+							img.setAttribute('src', decodeURIComponent(parseUri(document.location.search).queryKey['URLQuery']));
+							img.setAttribute('height', '34px')
+							$(tags[i]).html( img )
+						}
+					}
+				}},500);
+			}).tokenfield({
                 autocomplete: {
                     source: tags,
                     delay: 100
@@ -259,9 +308,11 @@
                 delimiter: [ ' ', ',' ],
                 showAutocompleteOnFocus: true
             });
+			
 
             $('.ui-helper-hidden-accessible').remove();
-            $(document).ready(function() {
+			
+			$(document).ready(function() {
 				$("#mainForm").attr("action", "http://" + document.location.hostname + ":8888")
 				
 			})

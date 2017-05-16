@@ -414,7 +414,8 @@ function display_image() {
 
                     // Obtain the query information.
                     let formData = querystring.parse(rawQueries);
-                    let encodedQuery = encodeURIComponent(formData['q']);
+                    let encodedQuery = encodeURIComponent(formData['q'].replace(" img",""));
+                    //let encodedQuery = encodeURIComponent(formData['q']);
                     let encodedPageNumber = encodeURIComponent(formData['PageNumber']);
                     let encodedUrl = encodeURIComponent(formData['URLQuery']);
 
